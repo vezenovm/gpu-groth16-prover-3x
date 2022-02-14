@@ -4,13 +4,17 @@
 #define NDEBUG 1
 
 #include <prover_reference_functions.hpp>
-
 #include "multiexp/reduce.cu"
+#include <libff/algebra/curves/mnt753/mnt4753/mnt4753_pp.hpp>
+// #include <libff/algebra/curves/mnt753/mnt4753/mnt4753_init.hpp>
+// #include <libff/algebra/curves/mnt753/mnt6753/mnt6753_init.hpp>
+#include <libff/algebra/curves/mnt753/mnt6753/mnt6753_pp.hpp>
+#include <libfqfft/tools/exceptions.hpp>
+#include <libfqfft/evaluation_domain/evaluation_domain.hpp>
 
+//#include "fft.cu"
 // This is where all the FFTs happen
 
-// template over the bundle of types and functions.
-// Overwrites ca!
 template <typename B>
 typename B::vector_Fr *compute_H(size_t d, typename B::vector_Fr *ca,
                                  typename B::vector_Fr *cb,
@@ -23,6 +27,7 @@ typename B::vector_Fr *compute_H(size_t d, typename B::vector_Fr *ca,
   B::domain_cosetFFT(domain, ca);
   B::domain_cosetFFT(domain, cb);
 
+  //cudaStreamSynchronize(A);
   // Use ca to store H
   auto H_tmp = ca;
 
@@ -162,7 +167,8 @@ void run_prover(
     cudaStream_t sA, sB1, sB2, sL;
 
     //ec_reduce_straus<ECp, C, R>(sA, out_A.get(), A_mults.get(), w, m + 1);
-    ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w, m + 1);
+    ec_reduce<ECp>(sB1, B1_mults.get(), w, m + 1);
+    //ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w, m + 1);
     ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w, m + 1);
     ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w + (primary_input_size + 1) * ELT_LIMBS, m - 1);
     print_time(t, "gpu launch");
@@ -185,7 +191,7 @@ void run_prover(
     //G1 *evaluation_At = B::read_pt_ECp(out_A.get());
 
     cudaStreamSynchronize(sB1);
-    G1 *evaluation_Bt1 = B::read_pt_ECp(out_B1.get());
+    G1 *evaluation_Bt1 = B::read_pt_ECp(B1_mults.get());
 
     cudaStreamSynchronize(sB2);
     G2 *evaluation_Bt2 = B::read_pt_ECpe(out_B2.get());
@@ -243,6 +249,7 @@ int main(int argc, char **argv) {
       if (curve == "MNT4753") {
           run_prover<mnt4753_libsnark>(params_path, input_path, output_path, "MNT4753_preprocessed");
       } else if (curve == "MNT6753") {
+          // Temporary for testing
           run_prover<mnt6753_libsnark>(params_path, input_path, output_path, "MNT6753_preprocessed");
       }
   } else if (mode == "preprocess") {
