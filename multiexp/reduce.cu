@@ -311,6 +311,19 @@ struct CudaFree {
 typedef std::unique_ptr<var, CudaFree> var_ptr;
 
 var_ptr
+allocate_memory_managed(size_t nbytes, int dbg = 0) {
+    var *mem = nullptr;
+    cudaMallocManaged(&mem, nbytes);
+    if (mem == nullptr) {
+        fprintf(stderr, "Failed to allocate enough device memory\n");
+        abort();
+    }
+    if (dbg)
+        print_meminfo(nbytes);
+    return var_ptr(mem);
+}
+
+var_ptr
 allocate_memory(size_t nbytes, int dbg = 0) {
     var *mem = nullptr;
     cudaMallocManaged(&mem, nbytes);
@@ -328,7 +341,7 @@ load_scalars(size_t n, FILE *inputs)
 {
     static constexpr size_t scalar_bytes = ELT_BYTES;
     size_t total_bytes = n * scalar_bytes;
-
+    printf("total scalar bytes: %zu", total_bytes);
     auto mem = allocate_memory(total_bytes);
     if (fread((void *)mem.get(), total_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read scalars\n");

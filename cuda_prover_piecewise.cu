@@ -131,19 +131,10 @@ void run_prover(
 
     size_t space = ((m + 1) + R - 1) / R;
 
+    // Previous location for where memory was declared
     //auto A_mults = load_points_affine<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
     //auto out_A = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
 
-    auto B1_mults = load_points_affine<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
-    auto out_B1 = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
-
-    auto B2_mults = load_points_affine<ECpe>(((1U << C) - 1)*(m + 1), preprocessed_file);
-    auto out_B2 = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
-
-    auto L_mults = load_points_affine<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
-    auto out_L = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
-
-    fclose(preprocessed_file);
 
     print_time(t, "load preprocessing");
 
@@ -166,11 +157,47 @@ void run_prover(
 
     cudaStream_t sA, sB1, sB2, sL;
 
-    //ec_reduce_straus<ECp, C, R>(sA, out_A.get(), A_mults.get(), w, m + 1);
-    ec_reduce<ECp>(sB1, B1_mults.get(), w, m + 1);
-    //ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w, m + 1);
+    size_t out_size = space * ECpe::NELTS * ELT_BYTES;
+
+    printf("about to allocate B1\n");
+
+    auto B1_mults = load_points_affine<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    auto out_B1 = allocate_memory(out_size);
+
+    printf("allocate B1 affine points and out_B1\n");
+
+    ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w, m + 1);
+
+    printf("ran B1 ec_reduce_straus\n");
+
+    // cudaStreamSynchronize(sB1);
+    // cudaDeviceSynchronize();
+
+    printf("about to allocate B2\n");
+
+    auto B2_mults = load_points_affine<ECpe>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    auto out_B2 = allocate_memory(out_size);
+
     ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w, m + 1);
+
+    // cudaStreamSynchronize(sB2);
+    // cudaDeviceSynchronize();
+
+    auto L_mults = load_points_affine<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
+    auto out_L = allocate_memory(out_size);
+
     ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w + (primary_input_size + 1) * ELT_LIMBS, m - 1);
+
+    // cudaStreamSynchronize(sL);
+    // cudaDeviceSynchronize();
+
+    fclose(preprocessed_file);
+
+    //ec_reduce_straus<ECp, C, R>(sA, out_A.get(), A_mults.get(), w, m + 1);
+    //ec_reduce<ECp>(sB1, B1_mults.get(), w, m + 1);
+    //ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w, m + 1);
+    //ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w, m + 1);
+    //ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w + (primary_input_size + 1) * ELT_LIMBS, m - 1);
     print_time(t, "gpu launch");
 
     G1 *evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
