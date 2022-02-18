@@ -127,17 +127,7 @@ void run_prover(
 
     static constexpr int R = 32;
     static constexpr int C = 5;
-    FILE *preprocessed_file = fopen(preprocessed_path, "r");
-
-    size_t space = ((m + 1) + R - 1) / R;
-
-    // Previous location for where memory was declared
-    //auto A_mults = load_points_affine<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
-    //auto out_A = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
-
-
-    print_time(t, "load preprocessing");
-
+    
     auto params = B::read_params(params_file, d, m);
     fclose(params_file);
     print_time(t, "load params");
@@ -152,6 +142,18 @@ void run_prover(
     print_time(t, "load inputs");
 
     const var *w = w_.get();
+    printf("w: %zu\n", w);
+
+    FILE *preprocessed_file = fopen(preprocessed_path, "r");
+
+    size_t space = ((m + 1) + R - 1) / R;
+
+    // Previous location for where memory was declared
+    //auto A_mults = load_points_affine<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    //auto out_A = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
+
+
+    print_time(t, "load preprocessing");
 
     auto t_gpu = t;
 
@@ -164,14 +166,19 @@ void run_prover(
     auto B1_mults = load_points_affine<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
     auto out_B1 = allocate_memory(out_size);
 
-    printf("allocate B1 affine points and out_B1\n");
+    //printf("allocate B1 affine points and out_B1, out_size: %zu\n", out_size);
 
     ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w, m + 1);
 
-    printf("ran B1 ec_reduce_straus\n");
+    //printf("ran B1 ec_reduce_straus: B1_mults: %zu\n", B1_mults.get());
+    //cudaDeviceSynchronize();
 
-    // cudaStreamSynchronize(sB1);
-    // cudaDeviceSynchronize();
+    //cudaStreamSynchronize(sB1);
+    //var *host_B1;
+    var *host_B1 = (var *) malloc (out_size);
+    //printf("address host_B1: %d, out_B1: %zu\n", &host_B1, out_B1.get());
+    cudaMemcpyAsync((void **)&host_B1[0], out_B1.get(), out_size, cudaMemcpyDeviceToHost);
+    cudaDeviceSynchronize();
 
     printf("about to allocate B2\n");
 
@@ -179,17 +186,25 @@ void run_prover(
     auto out_B2 = allocate_memory(out_size);
 
     ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w, m + 1);
+    //cudaDeviceSynchronize();
 
-    // cudaStreamSynchronize(sB2);
-    // cudaDeviceSynchronize();
+    //cudaStreamSynchronize(sB2);
+    var *host_B2 = (var *) malloc (out_size);;
+    cudaMemcpyAsync((void **)&host_B2[0], out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
+    cudaDeviceSynchronize();
+
+    printf("about to allocate L\n");
 
     auto L_mults = load_points_affine<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
     auto out_L = allocate_memory(out_size);
 
     ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w + (primary_input_size + 1) * ELT_LIMBS, m - 1);
+    //cudaDeviceSynchronize();
 
-    // cudaStreamSynchronize(sL);
-    // cudaDeviceSynchronize();
+    //cudaStreamSynchronize(sL);
+    var *host_L = (var *) malloc (out_size);;
+    cudaMemcpyAsync((void **)&host_L[0], out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
+    cudaDeviceSynchronize();
 
     fclose(preprocessed_file);
 
@@ -213,18 +228,25 @@ void run_prover(
 
     print_time(t, "cpu 1");
 
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
     //cudaStreamSynchronize(sA);
     //G1 *evaluation_At = B::read_pt_ECp(out_A.get());
 
-    cudaStreamSynchronize(sB1);
-    G1 *evaluation_Bt1 = B::read_pt_ECp(B1_mults.get());
+    //cudaStreamSynchronize(sB1);
+    //G1 *evaluation_Bt1 = B::read_pt_ECp(out_B1.get());
 
-    cudaStreamSynchronize(sB2);
-    G2 *evaluation_Bt2 = B::read_pt_ECpe(out_B2.get());
+    //cudaStreamSynchronize(sB2);
+    //G2 *evaluation_Bt2 = B::read_pt_ECpe(out_B2.get());
 
-    cudaStreamSynchronize(sL);
-    G1 *evaluation_Lt = B::read_pt_ECp(out_L.get());
+    //cudaStreamSynchronize(sL);
+    //G1 *evaluation_Lt = B::read_pt_ECp(out_L.get());
+    printf("host_B1: %zu\n", host_B1);
+    //cudaStreamSynchronize(sB1);
+    G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
+    //cudaStreamSynchronize(sB2);
+    G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
+    //cudaStreamSynchronize(sL);
+    G1 *evaluation_Lt = B::read_pt_ECp(host_L);
 
     print_time(t_gpu, "gpu e2e");
 
@@ -244,6 +266,10 @@ void run_prover(
     cudaStreamDestroy(sB1);
     cudaStreamDestroy(sB2);
     cudaStreamDestroy(sL);
+
+    free(host_B1);
+    free(host_B2);
+    free(host_L);
 
     B::delete_vector_G1(H);
 

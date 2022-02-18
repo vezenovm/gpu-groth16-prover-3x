@@ -326,7 +326,7 @@ allocate_memory_managed(size_t nbytes, int dbg = 0) {
 var_ptr
 allocate_memory(size_t nbytes, int dbg = 0) {
     var *mem = nullptr;
-    cudaMallocManaged(&mem, nbytes);
+    cudaMalloc(&mem, nbytes);
     if (mem == nullptr) {
         fprintf(stderr, "Failed to allocate enough device memory\n");
         abort();
@@ -341,12 +341,16 @@ load_scalars(size_t n, FILE *inputs)
 {
     static constexpr size_t scalar_bytes = ELT_BYTES;
     size_t total_bytes = n * scalar_bytes;
-    printf("total scalar bytes: %zu", total_bytes);
-    auto mem = allocate_memory(total_bytes);
-    if (fread((void *)mem.get(), total_bytes, 1, inputs) < 1) {
+    printf("total scalar bytes: %zu\n", total_bytes);
+    auto mem = allocate_memory(total_bytes, 1);
+
+    void *scalars_buffer = (void *) malloc (total_bytes);
+    if (fread(scalars_buffer, total_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read scalars\n");
         abort();
     }
+    cudaMemcpy(mem.get(), scalars_buffer, total_bytes, cudaMemcpyHostToDevice); 
+    free(scalars_buffer);
     return mem;
 }
 
@@ -389,11 +393,17 @@ load_points_affine(size_t n, FILE *inputs)
     static constexpr size_t aff_pt_bytes = 2 * coord_bytes;
 
     size_t total_aff_bytes = n * aff_pt_bytes;
+    printf("total affine bytes: %zu\n", total_aff_bytes);
+    auto mem = allocate_memory(total_aff_bytes, 1);
 
-    auto mem = allocate_memory(total_aff_bytes);
-    if (fread((void *)mem.get(), total_aff_bytes, 1, inputs) < 1) {
+    void *aff_bytes_buffer = (void *) malloc (total_aff_bytes);
+    if (fread(aff_bytes_buffer, total_aff_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read all curve poinst\n");
         abort();
     }
+    //printf("aff_bytes_buffer: %p\n", aff_bytes_buffer);
+    cudaMemcpy(mem.get(), aff_bytes_buffer, total_aff_bytes, cudaMemcpyHostToDevice); 
+    //printf("mem in load_points_affine after cudaMemcpy: %zu\n", mem.get());
+    free(aff_bytes_buffer);
     return mem;
 }
