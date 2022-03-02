@@ -104,6 +104,67 @@ int generate_paramaters(
 
     const libff::Fr<ppT> r = libff::Fr<ppT>::random_element();
     write_fr<ppT>(input, r);
+    printf("size of r: %zu\n", sizeof(r));
+
+    const libff::Fr<ppT> g = libff::Fr<ppT>::multiplicative_generator;
+    write_fr<ppT>(input, g);
+    printf("size of g: %zu\n", sizeof(g));
+    printf("g: \n");
+    g.print();
+
+    Fr<ppT> g_inv = g.inverse();
+    printf("size of g inv: %zu\n", sizeof(g_inv));
+    write_fr<ppT>(input, g_inv);
+    printf("g inv: \n");
+    g_inv.print();
+
+    bool err;
+    // const libff::Fr<ppT> omega = libff::get_root_of_unity<Fr<ppT>>(d_plus_1, err);
+    // const libff::Fr<ppT> omega = Fr<ppT>::root_of_unity;
+    Fr<ppT> omega;
+    const size_t logn = log2(d_plus_1);
+
+    // if (logn > Fr<ppT>::s) {
+    //   err = true;
+    //   omega = Fr<ppT>::one();
+    // }
+    // else {
+      omega = Fr<ppT>::root_of_unity;
+      for (size_t i = Fr<ppT>::s; i > logn; --i)
+      {
+        omega *= omega;
+      }
+    // }
+    // if (err) {
+    //   printf("error getting root of unity for mnt4753_pp\n");
+    // }
+    write_fr<ppT>(input, omega);
+    printf("size of omega: %zu\n", sizeof(omega));
+
+    printf("omega: \n");
+    omega.print();
+
+    Fr<ppT> omega_inv = omega.inverse();
+    write_fr<ppT>(input, omega_inv);
+    printf("size of omega inverse: %zu\n", sizeof(omega_inv));
+    
+    printf("omega: \n");
+    omega_inv.print();
+
+    const Fr<ppT> sconst = Fr<ppT>(d_plus_1).inverse();
+    write_fr<ppT>(input, sconst);
+
+    printf("sconst: \n");
+    sconst.print();
+
+    Fr<ppT> vanishing_polynomial = (g^d_plus_1) - Fr<ppT>::one();
+    Fr<ppT> Z_inverse_on_coset = vanishing_polynomial.inverse();
+    printf("size of z inverse on coset: %zu\n", sizeof(Z_inverse_on_coset));
+    write_fr<ppT>(input, Z_inverse_on_coset);
+    
+    printf("z_inverse_on_coset: \n");
+    Z_inverse_on_coset.print();
+
 
     fclose(input);
 
@@ -128,7 +189,7 @@ int main(int argc, const char * argv[])
   if (argc > 1) {
     std::string fastflag(argv[1]);
     if (fastflag == "fast") {
-      log2_d_4753 = 14;
+      log2_d_4753 = 15;
       log2_d_6753 = 10;
     }
   }

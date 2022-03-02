@@ -51,6 +51,7 @@ public:
 
   static void domain_iFFT(evaluation_domain *domain, vector_Fr *a);
   static void domain_cosetFFT(evaluation_domain *domain, vector_Fr *a);
+  // static void domain_cosetFFT_gpu(evaluation_domain *domain, vector_Fr *a, size_t d);
   static void domain_icosetFFT(evaluation_domain *domain, vector_Fr *a);
   static void domain_divide_by_Z_on_coset(evaluation_domain *domain,
                                           vector_Fr *a);
@@ -65,6 +66,7 @@ public:
 
   static vector_Fr *input_w(groth16_input *input);
   static vector_Fr *input_ca(groth16_input *input);
+  // static std::vector<libff::Fr<libff::mnt4753_pp>> input_ca_ptr(groth16_input *input);
   static vector_Fr *input_cb(groth16_input *input);
   static vector_Fr *input_cc(groth16_input *input);
   static field *input_r(groth16_input *input);
@@ -138,6 +140,7 @@ public:
 
   static void domain_iFFT(evaluation_domain *domain, vector_Fr *a);
   static void domain_cosetFFT(evaluation_domain *domain, vector_Fr *a);
+  // static void domain_cosetFFT_gpu(evaluation_domain *domain, vector_Fr *a, size_t d);
   static void domain_icosetFFT(evaluation_domain *domain, vector_Fr *a);
   static void domain_divide_by_Z_on_coset(evaluation_domain *domain,
                                           vector_Fr *a);
@@ -152,6 +155,7 @@ public:
 
   static vector_Fr *input_w(groth16_input *input);
   static vector_Fr *input_ca(groth16_input *input);
+  // static std::vector<libff::Fr<libff::mnt6753_pp>> input_ca_ptr(groth16_input *input);
   static vector_Fr *input_cb(groth16_input *input);
   static vector_Fr *input_cc(groth16_input *input);
   static field *input_r(groth16_input *input);

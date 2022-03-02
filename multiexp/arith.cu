@@ -256,6 +256,14 @@ struct Fp {
     set_one(Fp &x) { x.a = modulus_info::monty_one(); }
 
     __device__
+    static Fp
+    one() {
+        Fp x;
+        set_one(x);
+        return x;
+    }
+
+    __device__
     static void
     add(Fp &zz, const Fp &xx, const Fp &yy) {
         int br;
@@ -344,6 +352,116 @@ struct Fp {
         mul(z, x, x);
     }
 
+    // TODO: wrong fix
+    __device__
+    static void 
+    pow(Fp &z, Fp &x, const u_int32_t &rhs) {
+        if (rhs == 0)
+        {
+            z = Fp::one();
+            return;
+        }
+
+        if (rhs == 1)
+        {
+            return;
+        }
+
+        // uint32_t tmp[SIZE + 2];
+        // uint32_t temp[SIZE];
+
+        // Fp result = x;
+        for (size_t i = 0; i < rhs - 1; i++) {
+            mul(z, x, z);
+        }
+        // z = result;
+
+        // to_monty(fld1);
+
+        // for (size_t i = 0; i < SIZE; i++)
+        //     temp[i] = fld1.im_rep[i];
+
+        // for (size_t i = 0; i < pow - 1; i++)
+        // {
+        //     memset(tmp, 0, (SIZE + 2) * sizeof(uint32_t));
+        //     ciosMontgomeryMultiply(tmp, fld1.im_rep, SIZE, temp, _mod);
+        //     for (size_t k = 0; k < SIZE; k++)
+        //         fld1.im_rep[k] = tmp[k];
+        // }
+        // from_monty(fld1);
+    }
+
+        __device__
+    static void
+    from_monty(Fp &y, const Fp &x) {
+        Fp one;
+        one.a = fixnum::one();
+        mul(y, x, one);
+    }
+
+    // __device__
+    // static void
+    // Fp operator*(const Fp &rhs) const
+    // {
+    //     Fp z;
+    //     // for (size_t i = 0; i < SIZE; i++)
+    //     //     s.im_rep[i] = this->im_rep[i];
+    //     mul(z, *this, rhs);
+    //     return z;
+    // }
+
+    // __device__
+    // static void
+    // Fp operator*(Fp &rhs)
+    // {
+    //     Fp z;
+    //     // for (size_t i = 0; i < SIZE; i++)
+    //     //     s.im_rep[i] = this->im_rep[i];
+    //     mul(z, *this, rhs);
+    //     return z;
+    // }
+
+    // __device__
+    // static void
+    // Fp operator+(const Fp &rhs) const
+    // {
+    //     Fp s;
+    //     // for (size_t i = 0; i < SIZE; i++)
+    //     //     s.im_rep[i] = this->im_rep[i];
+    //     add(s, *this, rhs);
+    //     return s;
+    // }
+
+    // __device__ 
+    // static void
+    // Fp operator-(const Fp &rhs) const
+    // {
+    //     Fp s;
+    //     sub(s, *this, rhs);
+    //     return s;
+    // }
+
+    // __device__
+    // static void Fp operator^(const u_int32_t &rhs) const
+    // {
+    //     Fp s;
+    //     // for (size_t i = 0; i < SIZE; i++)
+    //     //     s.im_rep[i] = this->im_rep[i];
+    //     pow(s, *this, rhs);
+    //     return s;
+    // }
+
+    // Fp bool operator==(const Fp &rhs) const
+    // {
+    //     // for (size_t i = 0; i < SIZE; i++)
+    //     //     if (rhs.im_rep[i] != this->im_rep[i])
+    //     //         return false;
+    //     if (are_equal(*this, rhs)) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
+
 #if 0
     __device__
     static void
@@ -353,13 +471,7 @@ struct Fp {
     }
 #endif
 
-    __device__
-    static void
-    from_monty(Fp &y, const Fp &x) {
-        Fp one;
-        one.a = fixnum::one();
-        mul(y, x, one);
-    }
+
 };
 
 
