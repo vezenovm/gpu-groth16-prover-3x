@@ -275,24 +275,6 @@ void run_prover(
     // var *z_inverse = (var *) malloc (96);
     rewind(inputs_file);
     auto inputs = B::read_input(inputs_file, d, m);
-    // rewind(inputs_file);
-    // auto dummy_w = load_scalars(m+1, inputs_file);
-
-    // auto ca = load_scalars(d+1, inputs_file);
-    // auto cb = load_scalars(d+1, inputs_file);
-    // auto cc = load_scalars(d+1, inputs_file);
-    // auto r = load_scalars(1, inputs_file);
-
-    // auto multiplicative_generator = load_scalars(1, inputs_file);
-    // auto gen_inverse = load_scalars(1, inputs_file);
-    // auto omega = load_scalars(1, inputs_file);
-    // auto omega_inverse = load_scalars(1, inputs_file);
-    // auto sconst = load_scalars(1, inputs_file);
-    // auto z_inverse = load_scalars(1, inputs_file);
-
-    
-
-
     fclose(inputs_file);
     print_time(t, "load inputs");
     //printf("r: %zu\n", inputs->r);
