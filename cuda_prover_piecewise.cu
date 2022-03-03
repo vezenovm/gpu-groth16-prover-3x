@@ -83,7 +83,9 @@ __global__ void vector_Fr_muleq(var *x, var *y, size_t n)
         int off = idx * ELT_LIMBS;
         FieldT::load(q, x + off);
         FieldT::load(r, y + off);
-
+        
+        // TODO: check if needed
+        FieldT::from_monty(r, r);
         FieldT::mul(q, q, r); 
 
         FieldT::store(x + off, q);
@@ -110,6 +112,8 @@ __global__ void vector_Fr_subeq(var *x, var *y, size_t n)
         FieldT::load(q, x + off);
         FieldT::load(r, y + off);
 
+        // TODO: check if needed
+        FieldT::from_monty(r, r);
         FieldT::sub(q, q, r); 
 
         FieldT::store(x + off, q);
@@ -222,7 +226,7 @@ check_trailing(FILE *f, const char *name) {
 }
 
 template <typename B>
-void run_prover(
+void run_prover_gpu(
         const char *params_path,
         const char *input_path,
         const char *output_path,
@@ -289,7 +293,6 @@ void run_prover(
     //auto A_mults = load_points_affine<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
     //auto out_A = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
 
-
     print_time(t, "load preprocessing");
 
     auto t_gpu = t;
@@ -353,11 +356,11 @@ void run_prover(
     //ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w, m + 1);
     //ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w + (primary_input_size + 1) * ELT_LIMBS, m - 1);
     // print_time(t, "gpu launch");
-
+    print_time(t, "gpu 1");
     G1 *evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
     //G1 *evaluation_Bt1 = B::multiexp_G1(B::input_w(inputs), B::params_B1(params), m + 1);
     //G2 *evaluation_Bt2 = B::multiexp_G2(B::input_w(inputs), B::params_B2(params), m + 1);
-    print_time(t, "gpu 1 + msm for A");
+    print_time(t, "cpu msm for A");
 
     var *a = ca.get();
     var *b = cb.get();
@@ -473,6 +476,145 @@ void run_prover(
     print_time(beginning, "Total runtime (incl. file reads)");
 }
 
+template <typename B>
+void run_prover(
+        const char *params_path,
+        const char *input_path,
+        const char *output_path,
+        const char *preprocessed_path)
+{
+    B::init_public_params();
+
+    size_t primary_input_size = 1;
+
+    auto beginning = now();
+    auto t = beginning;
+
+    FILE *params_file = fopen(params_path, "r");
+    size_t d = read_size_t(params_file);
+    size_t m = read_size_t(params_file);
+    rewind(params_file);
+
+    printf("d = %zu, m = %zu\n", d, m);
+
+    typedef typename ec_type<B>::ECp ECp;
+    typedef typename ec_type<B>::ECpe ECpe;
+
+    typedef typename B::G1 G1;
+    typedef typename B::G2 G2;
+
+    static constexpr int R = 32;
+    static constexpr int C = 5;
+    FILE *preprocessed_file = fopen(preprocessed_path, "r");
+
+    size_t space = ((m + 1) + R - 1) / R;
+
+    //auto A_mults = load_points_affine<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    //auto out_A = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
+
+    auto B1_mults = load_points_affine<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    auto out_B1 = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
+
+    auto B2_mults = load_points_affine<ECpe>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    auto out_B2 = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
+
+    auto L_mults = load_points_affine<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
+    auto out_L = allocate_memory(space * ECpe::NELTS * ELT_BYTES);
+
+    fclose(preprocessed_file);
+
+    print_time(t, "load preprocessing");
+
+    auto params = B::read_params(params_file, d, m);
+    fclose(params_file);
+    print_time(t, "load params");
+
+    auto t_main = t;
+
+    FILE *inputs_file = fopen(input_path, "r");
+    auto w_ = load_scalars(m + 1, inputs_file);
+    rewind(inputs_file);
+    auto inputs = B::read_input(inputs_file, d, m);
+    fclose(inputs_file);
+    print_time(t, "load inputs");
+
+    const var *w = w_.get();
+
+    auto t_gpu = t;
+
+    cudaStream_t sA, sB1, sB2, sL;
+
+    //ec_reduce_straus<ECp, C, R>(sA, out_A.get(), A_mults.get(), w, m + 1);
+    ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w, m + 1);
+    ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w, m + 1);
+    ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w + (primary_input_size + 1) * ELT_LIMBS, m - 1);
+    print_time(t, "gpu launch");
+
+    G1 *evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
+    //G1 *evaluation_Bt1 = B::multiexp_G1(B::input_w(inputs), B::params_B1(params), m + 1);
+    //G2 *evaluation_Bt2 = B::multiexp_G2(B::input_w(inputs), B::params_B2(params), m + 1);
+
+    // Do calculations relating to H on CPU after having set the GPU in
+    // motion
+    auto H = B::params_H(params);
+    auto coefficients_for_H =
+        compute_H<B>(d, B::input_ca(inputs), B::input_cb(inputs), B::input_cc(inputs));
+    G1 *evaluation_Ht = B::multiexp_G1(coefficients_for_H, H, d);
+
+    print_time(t, "cpu 1");
+
+    cudaDeviceSynchronize();
+    //cudaStreamSynchronize(sA);
+    //G1 *evaluation_At = B::read_pt_ECp(out_A.get());
+
+    cudaStreamSynchronize(sB1);
+    G1 *evaluation_Bt1 = B::read_pt_ECp(out_B1.get());
+
+    cudaStreamSynchronize(sB2);
+    G2 *evaluation_Bt2 = B::read_pt_ECpe(out_B2.get());
+
+    cudaStreamSynchronize(sL);
+    G1 *evaluation_Lt = B::read_pt_ECp(out_L.get());
+
+    print_time(t_gpu, "gpu e2e");
+
+    auto scaled_Bt1 = B::G1_scale(B::input_r(inputs), evaluation_Bt1);
+    auto Lt1_plus_scaled_Bt1 = B::G1_add(evaluation_Lt, scaled_Bt1);
+    auto final_C = B::G1_add(evaluation_Ht, Lt1_plus_scaled_Bt1);
+
+    print_time(t, "cpu 2");
+    B::print_G1(evaluation_Bt1);
+    B::print_G2(evaluation_Bt2);
+    B::print_G1(evaluation_Lt);
+    
+    B::groth16_output_write(evaluation_At, evaluation_Bt2, final_C, output_path);
+
+    print_time(t, "store");
+
+    print_time(t_main, "Total time from input to output: ");
+
+    //cudaStreamDestroy(sA);
+    cudaStreamDestroy(sB1);
+    cudaStreamDestroy(sB2);
+    cudaStreamDestroy(sL);
+
+    B::delete_vector_G1(H);
+
+    B::delete_G1(evaluation_At);
+    B::delete_G1(evaluation_Bt1);
+    B::delete_G2(evaluation_Bt2);
+    B::delete_G1(evaluation_Ht);
+    B::delete_G1(evaluation_Lt);
+    B::delete_G1(scaled_Bt1);
+    B::delete_G1(Lt1_plus_scaled_Bt1);
+    B::delete_vector_Fr(coefficients_for_H);
+    B::delete_groth16_input(inputs);
+    B::delete_groth16_params(params);
+
+    print_time(t, "cleanup");
+    print_time(beginning, "Total runtime (incl. file reads)");
+}
+
 int main(int argc, char **argv) {
   setbuf(stdout, NULL);
   std::string curve(argv[1]);
@@ -483,13 +625,23 @@ int main(int argc, char **argv) {
   if (mode == "compute") {
       const char *input_path = argv[4];
       const char *output_path = argv[5];
-
-      if (curve == "MNT4753") {
+      std::string gpu(argv[6]);
+      if (gpu == "gpu-fft") {
+        if (curve == "MNT4753") {
+            run_prover_gpu<mnt4753_libsnark>(params_path, input_path, output_path, "MNT4753_preprocessed");
+        } else if (curve == "MNT6753") {
+            // Temporary for testing
+            run_prover_gpu<mnt6753_libsnark>(params_path, input_path, output_path, "MNT6753_preprocessed");
+        }
+      } else if (gpu == "gpu-orig") {
+        if (curve == "MNT4753") {
           run_prover<mnt4753_libsnark>(params_path, input_path, output_path, "MNT4753_preprocessed");
-      } else if (curve == "MNT6753") {
+        } else if (curve == "MNT6753") {
           // Temporary for testing
           run_prover<mnt6753_libsnark>(params_path, input_path, output_path, "MNT6753_preprocessed");
+        }
       }
+
   } else if (mode == "preprocess") {
 #if 0
       if (curve == "MNT4753") {

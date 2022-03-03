@@ -370,11 +370,11 @@ struct Fp {
         // uint32_t tmp[SIZE + 2];
         // uint32_t temp[SIZE];
 
-        // Fp result = x;
+        Fp orig = x;
         for (size_t i = 0; i < rhs - 1; i++) {
-            mul(z, x, z);
+            mul(x, x, orig);
         }
-        // z = result;
+        z = x;
 
         // to_monty(fld1);
 
