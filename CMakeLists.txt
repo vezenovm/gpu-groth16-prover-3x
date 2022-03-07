@@ -4,6 +4,8 @@ enable_language(CUDA)
 
 project (libsnark)
 
+string(APPEND CMAKE_CUDA_FLAGS " -arch=sm_50")
+
 set(
   CURVE
   "BN128"
@@ -254,6 +256,8 @@ add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})
 add_subdirectory(depends)
 add_subdirectory(libsnark)
 add_subdirectory(cuda-fixnum)
+
+# target_compile_options(cuda_prover_piecewise.cu PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_50,code=sm_50>)
 
 add_executable (
     cuda_prover_piecewise

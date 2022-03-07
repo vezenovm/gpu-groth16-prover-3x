@@ -18,6 +18,8 @@
 #include <libfqfft/evaluation_domain/domains/basic_radix2_domain.hpp>
 
 #include "prover_reference_include/prover_reference_functions.hpp"
+// #include "cuda/fft_kernel.h"
+// #include <libsnark/fft.hpp>
 
 using namespace libff;
 using namespace libsnark;
@@ -129,11 +131,15 @@ G multiexp(typename std::vector<Fr>::const_iterator scalar_start,
       g_start, g_start + length, scalar_start, scalar_start + length, chunks);
 }
 
+
+
 class mnt4753_libsnark::groth16_input {
 public:
   std::shared_ptr<std::vector<Fr<mnt4753_pp>>> w;
   std::shared_ptr<std::vector<Fr<mnt4753_pp>>> ca, cb, cc;
   Fr<mnt4753_pp> r;
+  Fr<mnt4753_pp> g;
+  Fr<mnt4753_pp> omega;
 
   groth16_input(FILE *inputs, size_t d, size_t m) {
     w = std::make_shared<std::vector<libff::Fr<mnt4753_pp>>>(
@@ -159,6 +165,14 @@ public:
     }
 
     r = read_fr<mnt4753_pp>(inputs);
+
+
+    // g = Fr<mnt4753_pp>::multiplicative_generator;
+    // bool err;
+    // omega = libff::get_root_of_unity<Fr<mnt4753_pp>>(d+1, err);
+    // if (err) {
+    //   printf("error getting root of unity for mnt4753_pp");
+    // }
   }
 };
 
@@ -332,6 +346,13 @@ void mnt4753_libsnark::domain_cosetFFT(
     mnt4753_libsnark::vector_Fr *a) {
   domain->data->cosetFFT(*a->data, Fr<mnt4753_pp>::multiplicative_generator);
 }
+// void mnt4753_libsnark::domain_cosetFFT_gpu(
+//   mnt4753_libsnark::evaluation_domain *domain,
+//   mnt4753_libsnark::vector_Fr *a,
+//   size_t d) {
+//   // cuda_fft::gpu_cosetFFT<Fr<mnt4753_pp>>(*a->data, Fr<mnt4753_pp>::multiplicative_generator, d);
+//   gpu_cosetFFT<Fr<mnt4753_pp>>(*a->data, Fr<mnt4753_pp>::multiplicative_generator, d);
+// }
 void mnt4753_libsnark::domain_icosetFFT(
     mnt4753_libsnark::evaluation_domain *domain,
     mnt4753_libsnark::vector_Fr *a) {
@@ -402,6 +423,10 @@ mnt4753_libsnark::vector_Fr *
 mnt4753_libsnark::input_ca(mnt4753_libsnark::groth16_input *input) {
   return new mnt4753_libsnark::vector_Fr{.data = input->ca, .offset = 0};
 }
+// std::vector<Fr<mnt4753_pp>>
+// mnt4753_libsnark::input_ca_ptr(mnt4753_libsnark::groth16_input *input) {
+//   return *input->ca.get();
+// }
 mnt4753_libsnark::vector_Fr *mnt4753_libsnark::input_cb(groth16_input *input) {
   return new mnt4753_libsnark::vector_Fr{.data = input->cb, .offset = 0};
 }
@@ -456,6 +481,8 @@ public:
   std::shared_ptr<std::vector<Fr<mnt6753_pp>>> w;
   std::shared_ptr<std::vector<Fr<mnt6753_pp>>> ca, cb, cc;
   Fr<mnt6753_pp> r;
+  Fr<mnt6753_pp> g;
+  Fr<mnt6753_pp> omega;
 
   groth16_input(FILE *inputs, size_t d, size_t m) {
     w = std::make_shared<std::vector<libff::Fr<mnt6753_pp>>>(
@@ -481,6 +508,13 @@ public:
     }
 
     r = read_fr<mnt6753_pp>(inputs);
+
+    g = Fr<mnt6753_pp>::multiplicative_generator;
+    bool err;
+    omega = libff::get_root_of_unity<Fr<mnt6753_pp>>(d+1, err);
+    if (err) {
+      printf("error getting root of unity for mnt4753_pp");
+    }
   }
 };
 
@@ -672,6 +706,13 @@ void mnt6753_libsnark::domain_cosetFFT(
     mnt6753_libsnark::vector_Fr *a) {
   domain->data->cosetFFT(*a->data, Fr<mnt6753_pp>::multiplicative_generator);
 }
+// void mnt6753_libsnark::domain_cosetFFT_gpu(
+//   mnt6753_libsnark::evaluation_domain *domain,
+//   mnt6753_libsnark::vector_Fr *a,
+//   size_t d) {
+//   // cuda_fft::gpu_cosetFFT<Fr<mnt6753_pp>>(*a->data, Fr<mnt6753_pp>::multiplicative_generator, d);
+//   gpu_cosetFFT<Fr<mnt6753_pp>>(*a->data, Fr<mnt6753_pp>::multiplicative_generator, d);
+// }
 void mnt6753_libsnark::domain_icosetFFT(
     mnt6753_libsnark::evaluation_domain *domain,
     mnt6753_libsnark::vector_Fr *a) {
@@ -742,6 +783,10 @@ mnt6753_libsnark::vector_Fr *
 mnt6753_libsnark::input_ca(mnt6753_libsnark::groth16_input *input) {
   return new mnt6753_libsnark::vector_Fr{.data = input->ca, .offset = 0};
 }
+// std::vector<Fr<mnt6753_pp>>
+// mnt6753_libsnark::input_ca_ptr(mnt6753_libsnark::groth16_input *input) {
+//   return *input->ca.get();
+// }
 mnt6753_libsnark::vector_Fr *mnt6753_libsnark::input_cb(groth16_input *input) {
   return new mnt6753_libsnark::vector_Fr{.data = input->cb, .offset = 0};
 }
@@ -751,7 +796,6 @@ mnt6753_libsnark::vector_Fr *mnt6753_libsnark::input_cc(groth16_input *input) {
 mnt6753_libsnark::field *mnt6753_libsnark::input_r(groth16_input *input) {
   return new mnt6753_libsnark::field{.data = input->r};
 }
-
 mnt6753_libsnark::groth16_params *
 mnt6753_libsnark::read_params(FILE *params, size_t d, size_t m) {
     return new mnt6753_libsnark::groth16_params(params, d, m);

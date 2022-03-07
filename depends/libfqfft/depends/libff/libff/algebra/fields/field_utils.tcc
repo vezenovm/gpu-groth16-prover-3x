@@ -41,6 +41,7 @@ template<typename FieldT>
 typename std::enable_if<!std::is_same<FieldT, Double>::value, FieldT>::type
 get_root_of_unity(const size_t n)
 {
+    printf("got in here\n");
     const size_t logn = log2(n);
     if (n != (1u << logn)) throw std::invalid_argument("libff::get_root_of_unity: expected n == (1u << logn)");
     if (logn > FieldT::s) throw std::invalid_argument("libff::get_root_of_unity: expected logn <= FieldT::s");
@@ -50,7 +51,6 @@ get_root_of_unity(const size_t n)
     {
         omega *= omega;
     }
-
     return omega;
 }
 
