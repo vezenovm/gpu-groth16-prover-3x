@@ -354,6 +354,25 @@ load_scalars(size_t n, FILE *inputs)
     return mem;
 }
 
+var_ptr
+load_scalars_async(size_t n, FILE *inputs)
+{
+    //cudaStreamCreate(&strm);
+    static constexpr size_t scalar_bytes = ELT_BYTES;
+    size_t total_bytes = n * scalar_bytes;
+    printf("total scalar bytes: %zu\n", total_bytes);
+    auto mem = allocate_memory(total_bytes, 1);
+
+    void *scalars_buffer = (void *) malloc (total_bytes);
+    if (fread(scalars_buffer, total_bytes, 1, inputs) < 1) {
+        fprintf(stderr, "Failed to read scalars\n");
+        abort();
+    }
+    cudaMemcpyAsync(mem.get(), scalars_buffer, total_bytes, cudaMemcpyHostToDevice); 
+    free(scalars_buffer);
+    return mem;
+}
+
 template< typename EC >
 var_ptr
 load_points(size_t n, FILE *inputs)
@@ -407,3 +426,30 @@ load_points_affine(size_t n, FILE *inputs)
     free(aff_bytes_buffer);
     return mem;
 }
+
+template< typename EC >
+var_ptr
+load_points_affine_async(cudaStream_t &strm, size_t n, FILE *inputs)
+{
+    typedef typename EC::field_type FF;
+
+    static constexpr size_t coord_bytes = FF::DEGREE * ELT_BYTES;
+    static constexpr size_t aff_pt_bytes = 2 * coord_bytes;
+
+    size_t total_aff_bytes = n * aff_pt_bytes;
+    printf("total affine bytes: %zu\n", total_aff_bytes);
+
+    void *aff_bytes_buffer = (void *) malloc (total_aff_bytes);
+    if (fread(aff_bytes_buffer, total_aff_bytes, 1, inputs) < 1) {
+        fprintf(stderr, "Failed to read all curve poinst\n");
+        abort();
+    }
+    cudaStreamCreateWithFlags(&strm, cudaStreamNonBlocking);
+    auto mem = allocate_memory(total_aff_bytes, 1);
+
+    //printf("aff_bytes_buffer: %p\n", aff_bytes_buffer);
+    cudaMemcpyAsync(mem.get(), aff_bytes_buffer, total_aff_bytes, cudaMemcpyHostToDevice, strm); 
+    //printf("mem in load_points_affine after cudaMemcpy: %zu\n", mem.get());
+    free(aff_bytes_buffer);
+    return mem;
+} 
