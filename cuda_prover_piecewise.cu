@@ -221,6 +221,8 @@ void run_prover(
     // var *host_A = (var *) malloc (out_size);
     // cudaMemcpyAsync((void **)&host_A[0], out_A.get(), out_size, cudaMemcpyDeviceToHost, sA);
     // cudaDeviceSynchronize();
+    printf("about to allocate w 1\n");
+
     var *w = nullptr;
     cudaMallocAsync(&w, w_size, sB1);
     if (w == nullptr) {
@@ -233,6 +235,8 @@ void run_prover(
     var *host_B1 = (var *) malloc (out_size);
     cudaMemcpyAsync((void **)&host_B1[0], out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
     cudaFree(w);
+
+    printf("finished ec reduce B1\n");
     // cudaDeviceSynchronize();
     w = nullptr;
     cudaMallocAsync(&w, w_size, sB2);
