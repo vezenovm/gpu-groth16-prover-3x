@@ -103,7 +103,7 @@ load_scalars_async_host(size_t n, FILE *inputs)
 {
     static constexpr size_t scalar_bytes = ELT_BYTES;
     size_t total_bytes = n * scalar_bytes;
-    printf("total scalar bytes: %zu\n", total_bytes);
+    printf("total scalar bytes host alloc: %zu\n", total_bytes);
 
     void *scalars_buffer = (void *) malloc (total_bytes);
     if (fread(scalars_buffer, total_bytes, 1, inputs) < 1) {
@@ -202,17 +202,17 @@ void run_prover(
     printf("about to allocate B1\n");
 
     auto B1_mults = load_points_affine_async<ECp>(sB1, ((1U << C) - 1)*(m + 1), preprocessed_file);
-    auto out_B1 = allocate_memory(out_size);
+    auto out_B1 = allocate_memory_async(sB1, out_size);
 
     printf("about to allocate B2\n");
 
     auto B2_mults = load_points_affine_async<ECpe>(sB2, ((1U << C) - 1)*(m + 1), preprocessed_file);
-    auto out_B2 = allocate_memory(out_size);
+    auto out_B2 = allocate_memory_async(sB2, out_size);
 
     printf("about to allocate L\n");
 
     auto L_mults = load_points_affine_async<ECp>(sL, ((1U << C) - 1)*(m - 1), preprocessed_file);
-    auto out_L = allocate_memory(out_size);
+    auto out_L = allocate_memory_async(sL, out_size);
 
     fclose(preprocessed_file);
 
@@ -222,7 +222,7 @@ void run_prover(
     // cudaMemcpyAsync((void **)&host_A[0], out_A.get(), out_size, cudaMemcpyDeviceToHost, sA);
     // cudaDeviceSynchronize();
     var *w = nullptr;
-    cudaMalloc(&w, w_size);
+    cudaMallocAsync(&w, w_size, sB1);
     if (w == nullptr) {
         fprintf(stderr, "Failed to allocate enough device memory\n");
         abort();
@@ -235,7 +235,7 @@ void run_prover(
     cudaFree(w);
     // cudaDeviceSynchronize();
     w = nullptr;
-    cudaMalloc(&w, w_size);
+    cudaMallocAsync(&w, w_size, sB2);
     if (w == nullptr) {
         fprintf(stderr, "Failed to allocate enough device memory\n");
         abort();
@@ -248,7 +248,7 @@ void run_prover(
     cudaFree(w);
     // cudaDeviceSynchronize();
     w = nullptr;
-    cudaMalloc(&w, w_size);
+    cudaMallocAsync(&w, w_size, sL);
     if (w == nullptr) {
         fprintf(stderr, "Failed to allocate enough device memory\n");
         abort();

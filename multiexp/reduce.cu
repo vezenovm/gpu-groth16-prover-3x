@@ -337,6 +337,19 @@ allocate_memory(size_t nbytes, int dbg = 0) {
 }
 
 var_ptr
+allocate_memory_async(cudaStream_t &strm, size_t nbytes, int dbg = 0) {
+    var *mem = nullptr;
+    cudaMallocAsync(&mem, nbytes, strm);
+    if (mem == nullptr) {
+        fprintf(stderr, "Failed to allocate enough device memory\n");
+        abort();
+    }
+    if (dbg)
+        print_meminfo(nbytes);
+    return var_ptr(mem);
+}
+
+var_ptr
 load_scalars(size_t n, FILE *inputs)
 {
     static constexpr size_t scalar_bytes = ELT_BYTES;
@@ -355,13 +368,13 @@ load_scalars(size_t n, FILE *inputs)
 }
 
 var_ptr
-load_scalars_async(size_t n, FILE *inputs)
+load_scalars_async(cudaStream_t &strm, size_t n, FILE *inputs)
 {
     //cudaStreamCreate(&strm);
     static constexpr size_t scalar_bytes = ELT_BYTES;
     size_t total_bytes = n * scalar_bytes;
     printf("total scalar bytes: %zu\n", total_bytes);
-    auto mem = allocate_memory(total_bytes, 1);
+    auto mem = allocate_memory_async(strm, total_bytes, 1);
 
     void *scalars_buffer = (void *) malloc (total_bytes);
     if (fread(scalars_buffer, total_bytes, 1, inputs) < 1) {
@@ -444,8 +457,8 @@ load_points_affine_async(cudaStream_t &strm, size_t n, FILE *inputs)
         fprintf(stderr, "Failed to read all curve poinst\n");
         abort();
     }
-    cudaStreamCreateWithFlags(&strm, cudaStreamNonBlocking);
-    auto mem = allocate_memory(total_aff_bytes, 1);
+    cudaStreamCreateWithFlags(&strm, cudaStreamDefault);
+    auto mem = allocate_memory_async(strm, total_aff_bytes, 1);
 
     //printf("aff_bytes_buffer: %p\n", aff_bytes_buffer);
     cudaMemcpyAsync(mem.get(), aff_bytes_buffer, total_aff_bytes, cudaMemcpyHostToDevice, strm); 
