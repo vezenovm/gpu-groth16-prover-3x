@@ -139,6 +139,18 @@ load_points_affine_host(size_t n, FILE *inputs)
     return aff_bytes_buffer;
 }
 
+template<typename EC>
+size_t
+get_aff_total_bytes(size_t n) 
+{
+    typedef typename EC::field_type FF;
+
+    static constexpr size_t coord_bytes = FF::DEGREE * ELT_BYTES;
+    static constexpr size_t aff_pt_bytes = 2 * coord_bytes;
+
+    return (n * aff_pt_bytes);
+}
+
 template <typename B>
 void run_prover(
         const char *params_path,
@@ -200,26 +212,34 @@ void run_prover(
 
     size_t out_size = space * ECpe::NELTS * ELT_BYTES;
     size_t w_size = (m+1)*ELT_BYTES;
+    // typedef typename EC::field_type FF;
+
+    // static constexpr size_t coord_bytes = FF::DEGREE * ELT_BYTES;
+    // static constexpr size_t aff_pt_bytes = 2 * coord_bytes;
+    // size_t total_aff_bytes = n * aff_pt_bytes;
+
     // Previous location for where memory was declared
     // auto A_mults = load_points_affine_async<ECp>(sA, ((1U << C) - 1)*(m + 1), preprocessed_file);
     // auto out_A = allocate_memory(out_size);
 
     printf("about to allocate B1\n");
 
-    // void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
-    auto B1_mults = load_points_affine_async<ECp>(sB1, ((1U << C) - 1)*(m + 1), preprocessed_file);
+    void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    // auto B1_mults = load_points_affine_async<ECp>(sB1, ((1U << C) - 1)*(m + 1), preprocessed_file);
     // auto out_B1 = allocate_memory_async(sB1, out_size);
     auto out_B1 = allocate_memory(out_size, 1);
 
     printf("about to allocate B2\n");
 
-    auto B2_mults = load_points_affine_async<ECpe>(sB2, ((1U << C) - 1)*(m + 1), preprocessed_file);
+    void *B2_mults_host = load_points_affine_host<ECpe>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    // auto B2_mults = load_points_affine_async<ECpe>(sB2, ((1U << C) - 1)*(m + 1), preprocessed_file);
     // auto out_B2 = allocate_memory_async(sB2, out_size);
     auto out_B2 = allocate_memory(out_size, 1);
 
     printf("about to allocate L\n");
 
-    auto L_mults = load_points_affine_async<ECp>(sL, ((1U << C) - 1)*(m - 1), preprocessed_file);
+    void *L_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
+    // auto L_mults = load_points_affine_async<ECp>(sL, ((1U << C) - 1)*(m - 1), preprocessed_file);
     // auto out_L = allocate_memory_async(sL, out_size);
     auto out_L = allocate_memory(out_size, 1);
 
@@ -242,12 +262,14 @@ void run_prover(
     }
     print_meminfo(w_size);
 
-    // auto B1_mults = allocate_memory(((1U << C) - 1)*(m + 1), 1);
-    // cudaMemcpyAsync(B1_mults.get(), B1_mults_host, total_aff_bytes, cudaMemcpyHostToDevice, strm);
+    auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), 1);
+    cudaStreamCreateWithFlags(&sB1, cudaStreamNonBlocking);
+    cudaMemcpyAsync(B1_mults.get(), B1_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB1);
     cudaMemcpyAsync((void **)&w1[0], w_host, w_size, cudaMemcpyHostToDevice, sB1); 
     ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w1, m + 1);
     // var *host_B1 = (var *) malloc (out_size);
     var *host_B1;
+    cudaMallocHost(&host_B1, out_size);
     cudaMemcpyAsync((void **)&host_B1[0], out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
     // cudaFree(w1);
 
@@ -261,9 +283,16 @@ void run_prover(
         abort();
     }
     print_meminfo(w_size);
+
+    auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), 1);
+    cudaStreamCreateWithFlags(&sB2, cudaStreamNonBlocking);
+    cudaMemcpyAsync(B2_mults.get(), B2_mults_host, get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB2);
     cudaMemcpyAsync((void **)&w2[0], w_host, w_size, cudaMemcpyHostToDevice, sB2); 
+
     ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w2, m + 1);
-    var *host_B2 = (var *) malloc (out_size);;
+    // var *host_B2 = (var *) malloc (out_size);;
+    var *host_B2;
+    cudaMallocHost(&host_B2, out_size);
     cudaMemcpyAsync((void **)&host_B2[0], out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
     // cudaFree(w2);
     // cudaDeviceSynchronize();
@@ -275,9 +304,16 @@ void run_prover(
         abort();
     }
     print_meminfo(w_size);
+
+    auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), 1);
+    cudaStreamCreateWithFlags(&sL, cudaStreamNonBlocking);
+    cudaMemcpyAsync(L_mults.get(), L_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), cudaMemcpyHostToDevice, sL);
     cudaMemcpyAsync((void **)&w3[0], w_host, w_size, cudaMemcpyHostToDevice, sL); 
+
     ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w3 + (primary_input_size + 1) * ELT_LIMBS, m - 1);
-    var *host_L = (var *) malloc (out_size);;
+    // var *host_L = (var *) malloc (out_size);
+    var *host_L;
+    cudaMallocHost(&host_L, out_size);
     cudaMemcpyAsync((void **)&host_L[0], out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
     // cudaFree(w3);
     // cudaFreeHost(w_host);
@@ -313,8 +349,6 @@ void run_prover(
     cudaStreamSynchronize(sL);
     G1 *evaluation_Lt = B::read_pt_ECp(host_L);
 
-    cudaFreeHost(w_host);
-
     print_time(t_gpu, "gpu e2e");
 
     auto scaled_Bt1 = B::G1_scale(B::input_r(inputs), evaluation_Bt1);
@@ -339,9 +373,13 @@ void run_prover(
     cudaStreamDestroy(sB2);
     cudaStreamDestroy(sL);
 
-    free(host_B1);
-    free(host_B2);
-    free(host_L);
+    cudaFreeHost(B1_mults_host);
+    cudaFreeHost(B2_mults_host);
+    cudaFreeHost(L_mults_host);
+    cudaFreeHost(w_host);
+    cudaFreeHost(host_B1);
+    cudaFreeHost(host_B2);
+    cudaFreeHost(host_L);
 
     B::delete_vector_G1(H);
 
