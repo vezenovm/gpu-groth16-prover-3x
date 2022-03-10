@@ -374,14 +374,15 @@ load_scalars_async(cudaStream_t &strm, size_t n, FILE *inputs)
     static constexpr size_t scalar_bytes = ELT_BYTES;
     size_t total_bytes = n * scalar_bytes;
     printf("total scalar bytes: %zu\n", total_bytes);
-    auto mem = allocate_memory_async(strm, total_bytes, 1);
+    // auto mem = allocate_memory_async(strm, total_bytes, 1);
+    auto mem = allocate_memory(total_bytes, 1);
 
     void *scalars_buffer = (void *) malloc (total_bytes);
     if (fread(scalars_buffer, total_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read scalars\n");
         abort();
     }
-    cudaMemcpyAsync(mem.get(), scalars_buffer, total_bytes, cudaMemcpyHostToDevice); 
+    cudaMemcpyAsync(mem.get(), scalars_buffer, total_bytes, cudaMemcpyHostToDevice, strm); 
     free(scalars_buffer);
     return mem;
 }
@@ -452,17 +453,21 @@ load_points_affine_async(cudaStream_t &strm, size_t n, FILE *inputs)
     size_t total_aff_bytes = n * aff_pt_bytes;
     printf("total affine bytes: %zu\n", total_aff_bytes);
 
-    void *aff_bytes_buffer = (void *) malloc (total_aff_bytes);
+    // void *aff_bytes_buffer = (void *) malloc (total_aff_bytes);
+    void *aff_bytes_buffer;
+    cudaMallocHost((void **)&aff_bytes_buffer, total_aff_bytes);
     if (fread(aff_bytes_buffer, total_aff_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read all curve poinst\n");
         abort();
     }
-    cudaStreamCreateWithFlags(&strm, cudaStreamDefault);
-    auto mem = allocate_memory_async(strm, total_aff_bytes, 1);
+    cudaStreamCreateWithFlags(&strm, cudaStreamNonBlocking);
+    // auto mem = allocate_memory_async(strm, total_aff_bytes, 1);
+    auto mem = allocate_memory(total_aff_bytes, 1);
 
     //printf("aff_bytes_buffer: %p\n", aff_bytes_buffer);
     cudaMemcpyAsync(mem.get(), aff_bytes_buffer, total_aff_bytes, cudaMemcpyHostToDevice, strm); 
     //printf("mem in load_points_affine after cudaMemcpy: %zu\n", mem.get());
-    free(aff_bytes_buffer);
+    // cudaFreeHost(aff_bytes_buffer);
+    // free(aff_bytes_buffer);
     return mem;
 } 
