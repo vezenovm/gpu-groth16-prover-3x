@@ -417,7 +417,7 @@ void run_prover(
 
     // cudaFree(w1);
     // cudaFree(w2);
-    cudaFree(w3);
+    // cudaFree(w3);
 
     cudaFreeHost(B1_mults_host);
     cudaFreeHost(B2_mults_host);
