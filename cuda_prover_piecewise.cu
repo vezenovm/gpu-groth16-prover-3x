@@ -334,6 +334,9 @@ void run_prover(
     multiexp_kernel<ECpe, C, 2*R>(host_B2, w_host, w_size, B2_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB2);
     printf("finished ec reduce B2\n");
 
+    var *host_L;
+    cudaMallocHost(&host_L, out_size);
+    cudaStreamCreateWithFlags(&sL, cudaStreamNonBlocking);
 
     var *w3 = nullptr;
     // cudaMallocAsync(&w, w_size, sL);
@@ -345,14 +348,12 @@ void run_prover(
     print_meminfo(w_size);
     auto out_L = allocate_memory(out_size, 1);
     auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), 1);
-    cudaStreamCreateWithFlags(&sL, cudaStreamNonBlocking);
     cudaMemcpyAsync(L_mults.get(), L_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), cudaMemcpyHostToDevice, sL);
     cudaMemcpyAsync((void **)&w3[0], w_host, w_size, cudaMemcpyHostToDevice, sL); 
 
     ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w3 + (primary_input_size + 1) * ELT_LIMBS, m - 1);
     // var *host_L = (var *) malloc (out_size);
-    var *host_L;
-    cudaMallocHost(&host_L, out_size);
+
     cudaMemcpyAsync((void **)&host_L[0], out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
     // cudaFree(w3);
     // cudaFreeHost(w_host);
