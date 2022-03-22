@@ -163,26 +163,16 @@ multiexp_kernel(
     size_t m,
     cudaStream_t &strm)
 {
-    // cudaMalloc(&w_device, w_size);
-    // if (w_device == nullptr) {
-    //     fprintf(stderr, "Failed to allocate enough device memory\n");
-    //     abort();
-    // }
-    // print_meminfo(w_size);
-    // cudaStream_t executeStrm;
     cudaStreamCreateWithFlags(&strm, cudaStreamNonBlocking);
-    // cudaStreamCreateWithFlags(&executeStrm, cudaStreamNonBlocking);
 
-    auto w_device = allocate_memory(w_size, 1);
-    auto out = allocate_memory(out_size, 1);
-    auto mults = allocate_memory(get_aff_total_bytes<EC>(n_aff_pts), 1);
+    auto w_device = allocate_memory_async(w_size, strm, 1);
+    auto out = allocate_memory_asnyc(out_size, strm, 1);
+    auto mults = allocate_memory_asnyc(get_aff_total_bytes<EC>(n_aff_pts), strm, 1);
     cudaMemcpyAsync(mults.get(), mults_host, get_aff_total_bytes<EC>(n_aff_pts), cudaMemcpyHostToDevice, strm);
     // cudaMemcpyAsync((void **)&w_device[0], w_host, w_size, cudaMemcpyHostToDevice, strm); 
     cudaMemcpyAsync(w_device.get(), w_host, w_size, cudaMemcpyHostToDevice, strm); 
     ec_reduce_straus<EC, C, R>(strm, out.get(), mults.get(), w_device.get(), m + 1);
-    // var *host_B1 = (var *) malloc (out_size);
-    // var *host_B1;
-    // cudaMallocHost(&host_B1, out_size);
+
     cudaMemcpyAsync((void **)&host_B1[0], out.get(), out_size, cudaMemcpyDeviceToHost, strm);
 }
 
@@ -292,7 +282,7 @@ void run_prover(
     // cudaDeviceSynchronize();
     printf("about to allocate w 1\n");
 
-    // Originall how work was done before replacing calls in multiexp_kernel function
+    // Comments are originally how work was done before replacing calls in multiexp_kernel function, could go back depending on how we want to place unique_ptrs
     // var *w1 = nullptr;
     // cudaMallocAsync(&w, w_size, sB1);
     // cudaMalloc(&w1, w_size);
@@ -301,18 +291,22 @@ void run_prover(
     //     abort();
     // }
     // print_meminfo(w_size);
-    // auto out_B1 = allocate_memory(out_size, 1);
-    // auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), 1);
-    // cudaStreamCreateWithFlags(&sB1, cudaStreamNonBlocking);
-    // cudaMemcpyAsync(B1_mults.get(), B1_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB1);
-    // cudaMemcpyAsync((void **)&w1[0], w_host, w_size, cudaMemcpyHostToDevice, sB1); 
-    // ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w1, m + 1);
-    // // var *host_B1 = (var *) malloc (out_size);
     var *host_B1 = nullptr;
     cudaMallocHost(&host_B1, out_size);
-    // cudaMemcpyAsync((void **)&host_B1[0], out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
-    // cudaFree(w1);
-    multiexp_kernel<ECp, C, R>(host_B1, w_host, w_size, B1_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB1);
+    cudaStreamCreateWithFlags(&sB1, cudaStreamNonBlocking);
+
+    auto w1 = allocate_memory_async(w_size, sB1, 1);
+    auto out_B1 = allocate_memory(out_size, sB1, 1);
+    auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), sB1, 1);
+    
+    cudaMemcpyAsync(B1_mults.get(), B1_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB1);
+    cudaMemcpyAsync(w1.get(), w_host, w_size, cudaMemcpyHostToDevice, sB1); 
+    ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w1.get(), m + 1);
+
+    cudaMemcpyAsync((void **)&host_B1[0], out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
+    // Uncomment all these calls to have cudaFree scope within method
+    // Need to create struct for var * and cudaStream_t variables to use in unique_ptr deleter
+    // multiexp_kernel<ECp, C, R>(host_B1, w_host, w_size, B1_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB1);
     printf("finished ec reduce B1\n");
 
     // var *w2 = nullptr;
@@ -323,36 +317,29 @@ void run_prover(
     //     abort();
     // }
     // print_meminfo(w_size);
-    // auto out_B2 = allocate_memory(out_size, 1);
-    // auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), 1);
-    // cudaStreamCreateWithFlags(&sB2, cudaStreamNonBlocking);
-    // cudaMemcpyAsync(B2_mults.get(), B2_mults_host, get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB2);
-    // cudaMemcpyAsync((void **)&w2[0], w_host, w_size, cudaMemcpyHostToDevice, sB2); 
-
-    // ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w2, m + 1);
-    // // var *host_B2 = (var *) malloc (out_size);;
     var *host_B2;
     cudaMallocHost(&host_B2, out_size);
-    // cudaMemcpyAsync((void **)&host_B2[0], out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
-    // cudaFree(w2);
-    multiexp_kernel<ECpe, C, 2*R>(host_B2, w_host2, w_size, B2_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB2);
+    cudaStreamCreateWithFlags(&sB2, cudaStreamNonBlocking);
+
+    auto w2 = allocate_memory_async(w_size, sB2, 1);
+    auto out_B2 = allocate_memory_asnyc(out_size, sB2, 1);
+    auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), sB2, 1);
+    cudaMemcpyAsync(B2_mults.get(), B2_mults_host, get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB2);
+    cudaMemcpyAsync(w2.get(), w_host, w_size, cudaMemcpyHostToDevice, sB2); 
+
+    ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w2.get(), m + 1);
+
+    cudaMemcpyAsync((void **)&host_B2[0], out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
+    // multiexp_kernel<ECpe, C, 2*R>(host_B2, w_host2, w_size, B2_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB2);
     printf("finished ec reduce B2\n");
 
     var *host_L;
     cudaMallocHost(&host_L, out_size);
     cudaStreamCreateWithFlags(&sL, cudaStreamNonBlocking);
 
-    // var *w3 = nullptr;
-    // // cudaMallocAsync(&w, w_size, sL);
-    // cudaMalloc(&w3, w_size);
-    // if (w3 == nullptr) {
-    //     fprintf(stderr, "Failed to allocate enough device memory\n");
-    //     abort();
-    // }
-    // print_meminfo(w_size);
-    auto w3 = allocate_memory(w_size, 1);
-    auto out_L = allocate_memory(out_size, 1);
-    auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), 1);
+    auto w3 = allocate_memory_async(w_size, sL, 1);
+    auto out_L = allocate_memory_async(out_size, sL, 1);
+    auto L_mults = allocate_memory_async(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), sL, 1);
     cudaMemcpyAsync(L_mults.get(), L_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), cudaMemcpyHostToDevice, sL);
     // cudaMemcpyAsync((void **)&w3[0], w_host, w_size, cudaMemcpyHostToDevice, sL); 
     cudaMemcpyAsync(w3.get(), w_host3, w_size, cudaMemcpyHostToDevice, sL); 
