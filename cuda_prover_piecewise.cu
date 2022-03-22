@@ -167,7 +167,7 @@ multiexp_kernel(
 
     auto w_device = allocate_memory_async(w_size, strm, 1);
     auto out = allocate_memory_asnyc(out_size, strm, 1);
-    auto mults = allocate_memory_asnyc(get_aff_total_bytes<EC>(n_aff_pts), strm, 1);
+    auto mults = allocate_memory_async(get_aff_total_bytes<EC>(n_aff_pts), strm, 1);
     cudaMemcpyAsync(mults.get(), mults_host, get_aff_total_bytes<EC>(n_aff_pts), cudaMemcpyHostToDevice, strm);
     // cudaMemcpyAsync((void **)&w_device[0], w_host, w_size, cudaMemcpyHostToDevice, strm); 
     cudaMemcpyAsync(w_device.get(), w_host, w_size, cudaMemcpyHostToDevice, strm); 
