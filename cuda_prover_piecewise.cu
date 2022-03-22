@@ -322,7 +322,7 @@ void run_prover(
     cudaStreamCreateWithFlags(&sB2, cudaStreamNonBlocking);
 
     auto w2 = allocate_memory_async(w_size, sB2, 1);
-    auto out_B2 = allocate_memory_asnyc(out_size, sB2, 1);
+    auto out_B2 = allocate_memory_async(out_size, sB2, 1);
     auto B2_mults = allocate_memory_async(get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), sB2, 1);
     cudaMemcpyAsync(B2_mults.get(), B2_mults_host, get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB2);
     cudaMemcpyAsync(w2.get(), w_host, w_size, cudaMemcpyHostToDevice, sB2); 
