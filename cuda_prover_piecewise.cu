@@ -325,7 +325,7 @@ void run_prover(
     auto out_B2 = allocate_memory_async(out_size, sB2, 1);
     auto B2_mults = allocate_memory_async(get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), sB2, 1);
     cudaMemcpyAsync(B2_mults.get(), B2_mults_host, get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB2);
-    cudaMemcpyAsync(w2.get(), w_host, w_size, cudaMemcpyHostToDevice, sB2); 
+    cudaMemcpyAsync(w2.get(), w_host2, w_size, cudaMemcpyHostToDevice, sB2); 
 
     ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w2.get(), m + 1);
 
@@ -414,6 +414,8 @@ void run_prover(
     cudaFreeHost(B2_mults_host);
     cudaFreeHost(L_mults_host);
     cudaFreeHost(w_host);
+    cudaFreeHost(w_host2);
+    cudaFreeHost(w_host3);
     cudaFreeHost(host_B1);
     cudaFreeHost(host_B2);
     cudaFreeHost(host_L);
