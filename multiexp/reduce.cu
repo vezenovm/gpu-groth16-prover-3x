@@ -305,10 +305,18 @@ void print_meminfo(size_t allocated) {
             100.0 * free_mem / dev_mem);
 }
 
+struct VarWithStream {  
+    var *mem;
+    cudaStream_t stream;
+};
 struct CudaFree {
     void operator()(var *mem) { cudaFree(mem); }
 };
+struct CudaFreeAsync {
+    void operator()(VarWithStream *var_with_stream) { cudaFreeAsync(var_with_stream->mem, var_with_stream->stream); }
+};
 typedef std::unique_ptr<var, CudaFree> var_ptr;
+typedef std::unique_ptr<VarWithStream, CudaFreeAsync> var_ptr_async;
 
 var_ptr
 allocate_memory_managed(size_t nbytes, int dbg = 0) {
@@ -346,7 +354,10 @@ allocate_memory_async(size_t nbytes, cudaStream_t &strm, int dbg = 0) {
     }
     if (dbg)
         print_meminfo(nbytes);
-    return var_ptr(mem);
+    struct VarWithStream *var_async;
+    var_async->mem = mem;
+    var_async->stream = strm;
+    return var_ptr_async(var_async);
 }
 
 var_ptr
