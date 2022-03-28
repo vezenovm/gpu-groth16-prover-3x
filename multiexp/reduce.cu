@@ -344,7 +344,7 @@ allocate_memory(size_t nbytes, int dbg = 0) {
     return var_ptr(mem);
 }
 
-var_ptr
+var_ptr_async
 allocate_memory_async(size_t nbytes, cudaStream_t &strm, int dbg = 0) {
     var *mem = nullptr;
     cudaMallocAsync(&mem, nbytes, strm);
