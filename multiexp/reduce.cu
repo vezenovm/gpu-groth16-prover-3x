@@ -347,17 +347,17 @@ allocate_memory(size_t nbytes, int dbg = 0) {
 var_ptr_async
 allocate_memory_async(size_t nbytes, cudaStream_t &strm, int dbg = 0) {
     struct VarWithStream *var_async;
-    // var *mem = nullptr;
+    var *mem = nullptr;
     var_async->mem = nullptr;
     // var *mem = var_async->mem;
-    cudaMallocAsync(&var_async->mem, nbytes, strm);
-    if (&var_async->mem == nullptr) {
+    cudaMallocAsync(&mem, nbytes, strm);
+    if (&mem == nullptr) {
         fprintf(stderr, "Failed to allocate enough device memory\n");
         abort();
     }
     if (dbg)
         print_meminfo(nbytes);
-    // var_async->mem = mem;
+    var_async->mem = mem;
     var_async->stream = strm;
     return var_ptr_async(var_async);
 }

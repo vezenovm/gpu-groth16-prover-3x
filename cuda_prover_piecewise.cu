@@ -280,7 +280,7 @@ void run_prover(
     // var *host_A = (var *) malloc (out_size);
     // cudaMemcpyAsync((void **)&host_A[0], out_A.get(), out_size, cudaMemcpyDeviceToHost, sA);
     // cudaDeviceSynchronize();
-    printf("about to allocate w 1\n");
+    
 
     // Comments are originally how work was done before replacing calls in multiexp_kernel function, could go back depending on how we want to place unique_ptrs
     // var *w1 = nullptr;
@@ -294,8 +294,9 @@ void run_prover(
     var *host_B1 = nullptr;
     cudaMallocHost(&host_B1, out_size);
     cudaStreamCreateWithFlags(&sB1, cudaStreamNonBlocking);
-
+    printf("about to allocate w 1\n");
     auto w1 = allocate_memory_async(w_size, sB1, 1);
+    printf("allocated w 1 on device\n");
     auto out_B1 = allocate_memory_async(out_size, sB1, 1);
     auto B1_mults = allocate_memory_async(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), sB1, 1);
     printf("w1 ptr: %p", w1.get()->mem);
