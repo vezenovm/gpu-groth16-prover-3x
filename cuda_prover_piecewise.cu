@@ -299,11 +299,11 @@ void run_prover(
     auto out_B1 = allocate_memory_async(out_size, sB1, 1);
     auto B1_mults = allocate_memory_async(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), sB1, 1);
     printf("B1_mults ptr: %p", B1_mults.get().mem);
-    cudaMemcpyAsync(B1_mults.get().mem, B1_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB1);
-    cudaMemcpyAsync(w1.get().mem, w_host, w_size, cudaMemcpyHostToDevice, sB1); 
-    ec_reduce_straus<ECp, C, R>(sB1, out_B1.get().mem, B1_mults.get().mem, w1.get().mem, m + 1);
+    cudaMemcpyAsync(B1_mults.get()->mem, B1_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB1);
+    cudaMemcpyAsync(w1.get()->mem, w_host, w_size, cudaMemcpyHostToDevice, sB1); 
+    ec_reduce_straus<ECp, C, R>(sB1, out_B1.get()->mem, B1_mults.get()->mem, w1.get()->mem, m + 1);
 
-    cudaMemcpyAsync((void **)&host_B1[0], out_B1.get().mem, out_size, cudaMemcpyDeviceToHost, sB1);
+    cudaMemcpyAsync((void **)&host_B1[0], out_B1.get()->mem, out_size, cudaMemcpyDeviceToHost, sB1);
     // Uncomment all these calls to have cudaFree scope within method
     // Need to create struct for var * and cudaStream_t variables to use in unique_ptr deleter
     // multiexp_kernel<ECp, C, R>(host_B1, w_host, w_size, B1_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB1);
