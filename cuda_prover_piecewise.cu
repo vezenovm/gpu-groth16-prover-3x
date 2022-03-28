@@ -298,7 +298,7 @@ void run_prover(
     auto w1 = allocate_memory_async(w_size, sB1, 1);
     auto out_B1 = allocate_memory_async(out_size, sB1, 1);
     auto B1_mults = allocate_memory_async(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), sB1, 1);
-    printf("B1_mults ptr: %p", B1_mults.get().mem);
+    printf("w1 ptr: %p", w1.get()->mem);
     cudaMemcpyAsync(B1_mults.get()->mem, B1_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB1);
     cudaMemcpyAsync(w1.get()->mem, w_host, w_size, cudaMemcpyHostToDevice, sB1); 
     ec_reduce_straus<ECp, C, R>(sB1, out_B1.get()->mem, B1_mults.get()->mem, w1.get()->mem, m + 1);
