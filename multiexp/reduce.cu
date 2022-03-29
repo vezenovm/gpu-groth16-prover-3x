@@ -305,10 +305,18 @@ void print_meminfo(size_t allocated) {
             100.0 * free_mem / dev_mem);
 }
 
+struct VarWithStream {  
+    cudaStream_t stream;
+    var *mem;
+};
 struct CudaFree {
     void operator()(var *mem) { cudaFree(mem); }
 };
+struct CudaFreeAsync {
+    void operator()(VarWithStream *var_with_stream) { cudaFreeAsync(var_with_stream->mem, var_with_stream->stream); }
+};
 typedef std::unique_ptr<var, CudaFree> var_ptr;
+typedef std::unique_ptr<VarWithStream, CudaFreeAsync> var_ptr_async;
 
 var_ptr
 allocate_memory_managed(size_t nbytes, int dbg = 0) {
@@ -336,9 +344,15 @@ allocate_memory(size_t nbytes, int dbg = 0) {
     return var_ptr(mem);
 }
 
-var_ptr
+var_ptr_async
 allocate_memory_async(size_t nbytes, cudaStream_t &strm, int dbg = 0) {
+    printf("nbytes: %d\n", nbytes);
+    VarWithStream *var_async = new VarWithStream();
     var *mem = nullptr;
+    // printf("var_async->mem: %p\n", var_async->mem);
+    // var_async->mem = nullptr;
+    // var *mem = var_async->mem;
+    // printf("mem: %p", mem);
     cudaMallocAsync(&mem, nbytes, strm);
     if (mem == nullptr) {
         fprintf(stderr, "Failed to allocate enough device memory\n");
@@ -346,7 +360,15 @@ allocate_memory_async(size_t nbytes, cudaStream_t &strm, int dbg = 0) {
     }
     if (dbg)
         print_meminfo(nbytes);
-    return var_ptr(mem);
+    // printf("var_async->mem: %p", var_async->mem);
+    var_async->mem = mem;
+    // VarWithStream var_async = {.mem = mem, .stream = strm};
+    printf("mem: %p", mem);
+    printf("var_async->mem: %p", var_async->mem);
+    printf("strm: %p", strm);
+    var_async->stream = strm;
+    printf("var_async->stream: %p", var_async->stream);
+    return var_ptr_async(var_async);
 }
 
 var_ptr
