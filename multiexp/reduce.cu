@@ -358,8 +358,8 @@ allocate_memory_async(size_t nbytes, cudaStream_t &strm, int dbg = 0) {
     if (dbg)
         print_meminfo(nbytes);
     var_async->mem = mem;
-    print("mem: %p", mem);
-    print("var_async->mem: %p", var_async->mem);
+    printf("mem: %p", mem);
+    printf("var_async->mem: %p", var_async->mem);
     var_async->stream = strm;
     return var_ptr_async(var_async);
 }
