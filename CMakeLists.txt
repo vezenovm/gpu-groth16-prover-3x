@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 enable_language(CUDA)
 
+string(APPEND CMAKE_CUDA_FLAGS " -g -G")
+
 project (libsnark)
 
 set(
