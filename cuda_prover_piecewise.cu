@@ -276,10 +276,6 @@ void run_prover(
     
     // printf("about to allocate A\n");
     // ec_reduce_straus<ECp, C, R>(sA, out_A.get(), A_mults.get(), w, m + 1);
-    // ec_reduce<ECp>(sB1, A_mults.get(), w, m + 1);
-    // var *host_A = (var *) malloc (out_size);
-    // cudaMemcpyAsync((void **)&host_A[0], out_A.get(), out_size, cudaMemcpyDeviceToHost, sA);
-    // cudaDeviceSynchronize();
     
 
     // Comments are originally how work was done before replacing calls in multiexp_kernel function, could go back depending on how we want to place unique_ptrs
@@ -303,21 +299,12 @@ void run_prover(
     cudaMemcpyAsync(B1_mults.get()->mem, B1_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB1);
     cudaMemcpyAsync(w1.get()->mem, w_host, w_size, cudaMemcpyHostToDevice, sB1); 
     ec_reduce_straus<ECp, C, R>(sB1, out_B1.get()->mem, B1_mults.get()->mem, w1.get()->mem, m + 1);
+    printf("finished ec reduce B1\n");
 
-    cudaMemcpyAsync((void **)&host_B1[0], out_B1.get()->mem, out_size, cudaMemcpyDeviceToHost, sB1);
     // Uncomment all these calls to have cudaFree scope within method
     // Need to create struct for var * and cudaStream_t variables to use in unique_ptr deleter
     // multiexp_kernel<ECp, C, R>(host_B1, w_host, w_size, B1_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB1);
-    printf("finished ec reduce B1\n");
 
-    // var *w2 = nullptr;
-    // // cudaMallocAsync(&w, w_size, sB2);
-    // cudaMalloc(&w2, w_size);
-    // if (w2 == nullptr) {
-    //     fprintf(stderr, "Failed to allocate enough device memory\n");
-    //     abort();
-    // }
-    // print_meminfo(w_size);
     var *host_B2;
     cudaMallocHost(&host_B2, out_size);
     cudaStreamCreateWithFlags(&sB2, cudaStreamNonBlocking);
@@ -330,7 +317,6 @@ void run_prover(
 
     ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get()->mem, B2_mults.get()->mem, w2.get()->mem, m + 1);
 
-    cudaMemcpyAsync((void **)&host_B2[0], out_B2.get()->mem, out_size, cudaMemcpyDeviceToHost, sB2);
     // multiexp_kernel<ECpe, C, 2*R>(host_B2, w_host2, w_size, B2_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB2);
     printf("finished ec reduce B2\n");
 
@@ -346,19 +332,11 @@ void run_prover(
     cudaMemcpyAsync(w3.get()->mem, w_host3, w_size, cudaMemcpyHostToDevice, sL); 
 
     ec_reduce_straus<ECp, C, R>(sL, out_L.get()->mem, L_mults.get()->mem, w3.get()->mem + (primary_input_size + 1) * ELT_LIMBS, m - 1);
-    // var *host_L = (var *) malloc (out_size);
-
-    cudaMemcpyAsync((void **)&host_L[0], out_L.get()->mem, out_size, cudaMemcpyDeviceToHost, sL);
-    // cudaFree(w3);
-    // cudaFreeHost(w_host);
-    // cudaDeviceSynchronize();
-
+    printf("finished ec reduce L\n");
 
     print_time(t, "gpu launch");
 
     G1 *evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
-    //G1 *evaluation_Bt1 = B::multiexp_G1(B::input_w(inputs), B::params_B1(params), m + 1);
-    //G2 *evaluation_Bt2 = B::multiexp_G2(B::input_w(inputs), B::params_B2(params), m + 1);
 
     // Do calculations relating to H on CPU after having set the GPU in
     // motion
@@ -375,12 +353,15 @@ void run_prover(
     //G1 *evaluation_At = B::read_pt_ECp(out_A.get());
 
     cudaStreamSynchronize(sB1);
+    cudaMemcpyAsync((void **)&host_B1[0], out_B1.get()->mem, out_size, cudaMemcpyDeviceToHost, sB1);
     G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
 
     cudaStreamSynchronize(sB2);
+    cudaMemcpyAsync((void **)&host_B2[0], out_B2.get()->mem, out_size, cudaMemcpyDeviceToHost, sB2);
     G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
 
     cudaStreamSynchronize(sL);
+    cudaMemcpyAsync((void **)&host_L[0], out_L.get()->mem, out_size, cudaMemcpyDeviceToHost, sL);
     G1 *evaluation_Lt = B::read_pt_ECp(host_L);
 
     print_time(t_gpu, "gpu e2e");
