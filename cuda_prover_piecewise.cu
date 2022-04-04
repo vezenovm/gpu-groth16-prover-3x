@@ -234,6 +234,8 @@ void run_prover(
     // auto B1_mults = load_points_affine_async<ECp>(sB1, ((1U << C) - 1)*(m + 1), preprocessed_file);
     // auto out_B1 = allocate_memory_async(sB1, out_size);
     auto out_B1 = allocate_memory(out_size, 1);
+    printf("B1_mults_host: %p\n", B1_mults_host);
+    printf("out_B1: %p\n", out_B1.get());
 
     printf("about to allocate B2\n");
 
@@ -241,23 +243,30 @@ void run_prover(
     // auto B2_mults = load_points_affine_async<ECpe>(sB2, ((1U << C) - 1)*(m + 1), preprocessed_file);
     // auto out_B2 = allocate_memory_async(sB2, out_size);
     auto out_B2 = allocate_memory(out_size, 1);
+    printf("B2_mults_host: %p\n", B2_mults_host);
+    printf("out_B2: %p\n", out_B2.get());
 
     printf("about to allocate L\n");
-
     void *L_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
     // auto L_mults = load_points_affine_async<ECp>(sL, ((1U << C) - 1)*(m - 1), preprocessed_file);
     // auto out_L = allocate_memory_async(sL, out_size);
     auto out_L = allocate_memory(out_size, 1);
+    printf("L_mults_host: %p\n", L_mults_host);
+    printf("out_L: %p\n", out_L.get());
 
     fclose(preprocessed_file);
     
     var *host_B1 = nullptr;
     cudaMallocHost((void **)&host_B1, out_size);
-    printf("host_B1: %d\n", *host_B1);
+    printf("host_B1: %p\n", host_B1);
+
     var *host_B2 = nullptr;
     cudaMallocHost((void **)&host_B2, out_size);
+    printf("host_B2: %p\n", host_B2);
+
     var *host_L = nullptr;
     cudaMallocHost((void **)&host_L, out_size);
+    printf("host_L: %p\n", host_L);
     // printf("about to allocate A\n");
     // ec_reduce_straus<ECp, C, R>(sA, out_A.get(), A_mults.get(), w, m + 1);
     // var *host_A = (var *) malloc (out_size);
@@ -288,6 +297,10 @@ void run_prover(
     }
     print_meminfo(w_size);
 
+    printf("w1: %p\n", w1);
+    printf("w2: %p\n", w2);
+    printf("w3: %p\n", w3);
+
     auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), 1);
     cudaStreamCreateWithFlags(&sB1, cudaStreamNonBlocking);
     auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), 1);
@@ -299,33 +312,44 @@ void run_prover(
     printf("B1_mults_host: %d\n", (int *)B1_mults_host + (total_aff_bytes - 96));
     cudaMemcpyAsync(B1_mults.get(), B1_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB1);
     cudaMemcpyAsync(w1, w_host, w_size, cudaMemcpyHostToDevice, sB1); 
-    // cudaMemcpy(B1_mults.get(), B1_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice);
-    // cudaMemcpy(w1, w_host, w_size, cudaMemcpyHostToDevice); 
-    ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w1, m + 1);
-
-    cudaMemcpyAsync(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
-    // cudaMemcpy(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost);
-
-    printf("finished ec reduce B1\n");
-
 
     cudaMemcpyAsync(B2_mults.get(), B2_mults_host, get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB2);
-    cudaMemcpyAsync((void **)&w2[0], w_host2, w_size, cudaMemcpyHostToDevice, sB2); 
-    // cudaMemcpy(B2_mults.get(), B2_mults_host, get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice);
-    // cudaMemcpy((void **)&w2[0], w_host2, w_size, cudaMemcpyHostToDevice); 
-    ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w2, m + 1);
-
-    cudaMemcpyAsync((void **)&host_B2[0], out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
-    // cudaMemcpy((void **)&host_B2[0], out_B2.get(), out_size, cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(w2, w_host2, w_size, cudaMemcpyHostToDevice, sB2); 
 
     cudaMemcpyAsync(L_mults.get(), L_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), cudaMemcpyHostToDevice, sL);
-    cudaMemcpyAsync((void **)&w3[0], w_host3, w_size, cudaMemcpyHostToDevice, sL); 
-    // cudaMemcpy(L_mults.get(), L_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), cudaMemcpyHostToDevice);
-    // cudaMemcpy((void **)&w3[0], w_host3, w_size, cudaMemcpyHostToDevice);
-    ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w3 + (primary_input_size + 1) * ELT_LIMBS, m - 1);
+    cudaMemcpyAsync(w3, w_host3, w_size, cudaMemcpyHostToDevice, sL); 
 
-    cudaMemcpyAsync((void **)&host_L[0], out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
-    // cudaMemcpy((void **)&host_L[0], out_L.get(), out_size, cudaMemcpyDeviceToHost);
+
+    ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w1, m + 1);
+    printf("finished ec reduce B1\n");
+    // cudaMemcpyAsync(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
+
+    // cudaDeviceSynchronize(); //<--- Uncommented this causes program to hang
+    // Without this the code hangs on the next kernel launch. 
+    // printf("finished B1 copy to host\n");
+
+    // cudaMemcpyAsync(B2_mults.get(), B2_mults_host, get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB2);
+    // cudaMemcpyAsync(w2, w_host2, w_size, cudaMemcpyHostToDevice, sB2); 
+    ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w2, m + 1);
+    printf("finished ec reduce B2\n");
+    // cudaMemcpyAsync(host_B2, out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
+    // printf("finished B2 copy to host\n");
+
+    // cudaMemcpyAsync(L_mults.get(), L_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), cudaMemcpyHostToDevice, sL);
+    // cudaMemcpyAsync(w3, w_host3, w_size, cudaMemcpyHostToDevice, sL); 
+    ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w3 + (primary_input_size + 1) * ELT_LIMBS, m - 1);
+    printf("finished ec reduce L\n");
+
+    // cudaMemcpyAsync(host_L, out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
+
+
+    // cudaMemcpyAsync(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
+    // printf("finished B1 copy to host\n");
+    // cudaMemcpyAsync(host_B2, out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
+    // printf("finished B2 copy to host\n");
+    // cudaMemcpyAsync(host_L, out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
+    // printf("finished ec reduce L\n");
+
 
     print_time(t, "gpu launch");
 
@@ -343,17 +367,27 @@ void run_prover(
 
     print_time(t, "cpu 1");
 
-    cudaDeviceSynchronize();
+    // cudaDeviceSynchronize();
     //cudaStreamSynchronize(sA);
     //G1 *evaluation_At = B::read_pt_ECp(out_A.get());
-    printf("host_B1: %d\n", (int *)host_B1 + (out_size - 96));
+
+
     cudaStreamSynchronize(sB1);
+    cudaMemcpyAsync(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
+    printf("finished B1 copy to host\n");
+    printf("host_B1: %d\n", (int *)host_B1 + (out_size - 96));
     G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
-    printf("host_B2: %d\n", (int *)host_B2 + (out_size - 96));
+
     cudaStreamSynchronize(sB2);
+    cudaMemcpyAsync(host_B2, out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
+    printf("finished B2 copy to host\n");
+    printf("host_B2: %d\n", (int *)host_B2 + (out_size - 96));
     G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
-    printf("host_L: %d\n", (int *)host_L + (out_size - 96));
+
     cudaStreamSynchronize(sL);
+    cudaMemcpyAsync(host_L, out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
+    printf("finished ec reduce L\n");
+    printf("host_L: %d\n", (int *)host_L + (out_size - 96));
     G1 *evaluation_Lt = B::read_pt_ECp(host_L);
 
     print_time(t_gpu, "gpu e2e");

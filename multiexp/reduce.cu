@@ -24,6 +24,7 @@ ec_multiexp_straus(var *out, const var *multiples_, const var *scalars_, size_t 
     int tileIdx = T / BIG_WIDTH;
 
     int idx = elts_per_block * B + tileIdx;
+    // printf("inside ec_multiexp_straus\n");
 
     size_t n = (N + RR - 1) / RR;
     if (idx < n) {
@@ -80,6 +81,7 @@ ec_multiexp_straus(var *out, const var *multiples_, const var *scalars_, size_t 
         }
         EC::store_jac(out + out_off, x);
     }
+   
 }
 
 template< typename EC >
@@ -139,7 +141,8 @@ template< typename EC, int C, int R >
 void
 ec_reduce_straus(cudaStream_t &strm, var *out, const var *multiples, const var *scalars, size_t N)
 {
-    cudaStreamCreate(&strm);
+    // cudaStreamCreate(&strm);
+    // cudaStreamCreateWithFlags(&strm, cudaStreamNonBlocking);
     printf("got into ec_reduce_straus\n");
     static constexpr size_t pt_limbs = EC::NELTS * ELT_LIMBS;
     size_t n = (N + R - 1) / R;
@@ -147,16 +150,17 @@ ec_reduce_straus(cudaStream_t &strm, var *out, const var *multiples, const var *
     size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
     ec_multiexp_straus<EC, C, R><<< nblocks, threads_per_block, 0, strm>>>(out, multiples, scalars, N);
-
+    printf("finished ec_multiexp_straus call\n");
     size_t r = n & 1, m = n / 2;
     for ( ; m != 0; r = m & 1, m >>= 1) {
         nblocks = (m * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
         ec_sum_all<EC><<<nblocks, threads_per_block, 0, strm>>>(out, out + m*pt_limbs, m);
-        if (r)
+        if (r) {
             ec_sum_all<EC><<<1, threads_per_block, 0, strm>>>(out, out + 2*m*pt_limbs, 1);
+        }
     }
-        
+    printf("finished reduce calls\n");   
 }
 
 template< typename EC >
