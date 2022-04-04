@@ -277,37 +277,25 @@ void run_prover(
     // printf("about to allocate A\n");
     // ec_reduce_straus<ECp, C, R>(sA, out_A.get(), A_mults.get(), w, m + 1);
     
-
-    // Comments are originally how work was done before replacing calls in multiexp_kernel function, could go back depending on how we want to place unique_ptrs
-    // var *w1 = nullptr;
-    // cudaMallocAsync(&w, w_size, sB1);
-    // cudaMalloc(&w1, w_size);
-    // if (w1 == nullptr) {
-    //     fprintf(stderr, "Failed to allocate enough device memory\n");
-    //     abort();
-    // }
-    // print_meminfo(w_size);
     var *host_B1 = nullptr;
     cudaMallocHost(&host_B1, out_size);
     cudaStreamCreateWithFlags(&sB1, cudaStreamNonBlocking);
+
+    var *host_B2;
+    cudaMallocHost(&host_B2, out_size);
+    cudaStreamCreateWithFlags(&sB2, cudaStreamNonBlocking);
+
+    var *host_L;
+    cudaMallocHost(&host_L, out_size);
+    cudaStreamCreateWithFlags(&sL, cudaStreamNonBlocking);
+
     printf("about to allocate w 1\n");
     auto w1 = allocate_memory_async(w_size, sB1, 1);
     printf("allocated w 1 on device\n");
     auto out_B1 = allocate_memory_async(out_size, sB1, 1);
     auto B1_mults = allocate_memory_async(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), sB1, 1);
-    printf("w1 ptr: %p", w1.get()->mem);
     cudaMemcpyAsync(B1_mults.get()->mem, B1_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB1);
     cudaMemcpyAsync(w1.get()->mem, w_host, w_size, cudaMemcpyHostToDevice, sB1); 
-    ec_reduce_straus<ECp, C, R>(sB1, out_B1.get()->mem, B1_mults.get()->mem, w1.get()->mem, m + 1);
-    printf("finished ec reduce B1\n");
-
-    // Uncomment all these calls to have cudaFree scope within method
-    // Need to create struct for var * and cudaStream_t variables to use in unique_ptr deleter
-    // multiexp_kernel<ECp, C, R>(host_B1, w_host, w_size, B1_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB1);
-
-    var *host_B2;
-    cudaMallocHost(&host_B2, out_size);
-    cudaStreamCreateWithFlags(&sB2, cudaStreamNonBlocking);
 
     auto w2 = allocate_memory_async(w_size, sB2, 1);
     auto out_B2 = allocate_memory_async(out_size, sB2, 1);
@@ -315,21 +303,23 @@ void run_prover(
     cudaMemcpyAsync(B2_mults.get()->mem, B2_mults_host, get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1)), cudaMemcpyHostToDevice, sB2);
     cudaMemcpyAsync(w2.get()->mem, w_host2, w_size, cudaMemcpyHostToDevice, sB2); 
 
-    ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get()->mem, B2_mults.get()->mem, w2.get()->mem, m + 1);
-
-    // multiexp_kernel<ECpe, C, 2*R>(host_B2, w_host2, w_size, B2_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB2);
-    printf("finished ec reduce B2\n");
-
-    var *host_L;
-    cudaMallocHost(&host_L, out_size);
-    cudaStreamCreateWithFlags(&sL, cudaStreamNonBlocking);
-
     auto w3 = allocate_memory_async(w_size, sL, 1);
     auto out_L = allocate_memory_async(out_size, sL, 1);
     auto L_mults = allocate_memory_async(get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), sL, 1);
     cudaMemcpyAsync(L_mults.get()->mem, L_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), cudaMemcpyHostToDevice, sL);
-    // cudaMemcpyAsync((void **)&w3[0], w_host, w_size, cudaMemcpyHostToDevice, sL); 
     cudaMemcpyAsync(w3.get()->mem, w_host3, w_size, cudaMemcpyHostToDevice, sL); 
+
+    ec_reduce_straus<ECp, C, R>(sB1, out_B1.get()->mem, B1_mults.get()->mem, w1.get()->mem, m + 1);
+    printf("finished ec reduce B1\n");
+
+    // Uncomment all these calls to have cudaFree scope within method
+    // Need to create struct for var * and cudaStream_t variables to use in unique_ptr deleter
+    // multiexp_kernel<ECp, C, R>(host_B1, w_host, w_size, B1_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB1);
+
+    ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get()->mem, B2_mults.get()->mem, w2.get()->mem, m + 1);
+
+    // multiexp_kernel<ECpe, C, 2*R>(host_B2, w_host2, w_size, B2_mults_host, out_size, ((1U << C) - 1)*(m + 1), m, sB2);
+    printf("finished ec reduce B2\n");
 
     ec_reduce_straus<ECp, C, R>(sL, out_L.get()->mem, L_mults.get()->mem, w3.get()->mem + (primary_input_size + 1) * ELT_LIMBS, m - 1);
     printf("finished ec reduce L\n");
