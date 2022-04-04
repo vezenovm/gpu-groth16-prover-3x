@@ -247,7 +247,8 @@ template< typename EC, int C, int R >
 void
 ec_reduce_straus(cudaStream_t &strm, var *out, const var *multiples, const var *scalars, size_t N)
 {
-    cudaStreamCreate(&strm);
+    // Being created outside of method currently
+    // cudaStreamCreate(&strm);
 
     static constexpr size_t pt_limbs = EC::NELTS * ELT_LIMBS;
     size_t n = (N + R - 1) / R;
