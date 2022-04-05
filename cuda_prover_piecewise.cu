@@ -298,7 +298,6 @@ void run_prover(
     cudaMemcpyAsync(L_mults.get(), L_mults_host, get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1)), cudaMemcpyHostToDevice, sL);
     cudaMemcpyAsync(w3.get(), w_host3, w_size, cudaMemcpyHostToDevice, sL); 
 
-
     ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w1.get(), m + 1);
     printf("out of ec reduce B1, on host\n");
     // cudaMemcpyAsync(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
@@ -380,6 +379,8 @@ void run_prover(
     cudaFreeHost(B2_mults_host);
     cudaFreeHost(L_mults_host);
     cudaFreeHost(w_host);
+    cudaFreeHost(w_host2);
+    cudaFreeHost(w_host3);
     cudaFreeHost(host_B1);
     cudaFreeHost(host_B2);
     cudaFreeHost(host_L);
