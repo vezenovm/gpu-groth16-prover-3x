@@ -273,29 +273,6 @@ void run_prover(
     // cudaMemcpyAsync((void **)&host_A[0], out_A.get(), out_size, cudaMemcpyDeviceToHost, sA);
     printf("about to allocate w 1\n");
 
-    // var *w1 = nullptr;
-    // cudaMalloc(&w1, w_size);
-    // if (w1 == nullptr) {
-    //     fprintf(stderr, "Failed to allocate enough device memory\n");
-    //     abort();
-    // }
-    // print_meminfo(w_size);
-
-    // var *w2 = nullptr;
-    // cudaMalloc(&w2, w_size);
-    // if (w2 == nullptr) {
-    //     fprintf(stderr, "Failed to allocate enough device memory\n");
-    //     abort();
-    // }
-    // print_meminfo(w_size);
-
-    // var *w3 = nullptr;
-    // cudaMalloc(&w3, w_size);
-    // if (w3 == nullptr) {
-    //     fprintf(stderr, "Failed to allocate enough device memory\n");
-    //     abort();
-    // }
-    // print_meminfo(w_size);
     auto w1 = allocate_memory(w_size, 1);
     auto w2 = allocate_memory(w_size, 1);
     auto w3 = allocate_memory(w_size, 1);
