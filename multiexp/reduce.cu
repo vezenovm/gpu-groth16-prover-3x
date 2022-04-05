@@ -142,12 +142,8 @@ void
 ec_reduce_straus(cudaStream_t &strm, var *out, const var *multiples, const var *scalars, size_t N)
 {
     // cudaStreamCreate(&strm);
-<<<<<<< HEAD
     // cudaStreamCreateWithFlags(&strm, cudaStreamNonBlocking);
     printf("got into ec_reduce_straus\n");
-=======
-
->>>>>>> 070c630e778d4c0f15cc89420492821af9130ea0
     static constexpr size_t pt_limbs = EC::NELTS * ELT_LIMBS;
     size_t n = (N + R - 1) / R;
 
