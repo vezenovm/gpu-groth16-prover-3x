@@ -13,114 +13,6 @@ if ( cudaSuccess != result )            \
     std::cerr << "CUDA error " << result << " in " << __FILE__ << ":" << __LINE__ << ": " << cudaGetErrorString( result ) << " (" << #call << ")" << std::endl;  \
 }
 
-// template <typename EC, typename FieldT>
-// __inline__ __device__
-// EC warpReduceSum(EC x) {
-//     EC z, y;
-//     #pragma unroll
-//     for (int offset = warpSize/2; offset > 0; offset /= 2) {
-//         EC y = FieldT::shuffle_down(__activemask(), x, offset);
-//         EC::add(z, x, y)
-//         //x = x + y;
-//     }
-//     return z;
-// }
-
-// template <typename FieldT>
-// extern __shared__ FieldT sMem[];
-
-// template <typename EC, typename FieldT>
-// __inline__ __device__
-// FieldT blockReduceSum(EC x) {
-//     int lane = threadIdx.x % warpSize;
-//     int warpId = threadIdx.x / warpSize;
-//     x = warpReduceSum<EC>(x); 
-//     if (lane==0) sMem<EC>[warpId]=x;
-//     __syncthreads();
-//     if(threadIdx.x < blockDim.x / warpSize)
-//         x = sMem<EC>[lane];
-//     else {
-//         //x = FieldT::zero();
-//         EC::set_zero(x)
-//     }
-//     if (warpId==0) x = warpReduceSum<EC>(x);
-//     return x;
-// }
-
-// template <typename EC, typename FieldT>
-// __global__ void
-// deviceReduceKernelSecond(FieldT *out, const FieldT *resIn, const size_t n) { 
-//     const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-//     EC sum;
-//     EC::set_zero(sum);
-//     if (idx < n) {
-//         EC z;
-//         for(int i = idx; i < n; i += (blockDim.x * gridDim.x)){
-//             //sum = sum + resIn[i];
-//             EC::add(z, sum, resIn[i])
-//         }
-//         sum = blockReduceSum<FieldT>(sum);
-//     }   
-//     if (threadIdx.x==0) // Store the end result
-//         out[blockIdx.x] = sum; 
-// }
-
-// template <typename EC, typename FieldT, typename FieldMul>
-// __global__ void 
-// deviceReduceKernel(FieldT *result, const FieldT *a, const FieldMul *mul, const size_t n) {
-//     const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-//     EC x;
-//     EC::set_zero(x);
-//     if (idx < n) {
-//         for(int i = idx; i < n; i += (blockDim.x * gridDim.x)){
-//             const FieldT tmp = a[i] * mul[i];
-//             sum = sum + tmp;   
-//         }
-//         sum = blockReduceSum<FieldT>(sum);
-//     }
-//     if (threadIdx.x==0)
-//         result[blockIdx.x] = sum;
-// }
-
-// // Multiexp is a function that performs a multiplication and a summation of all elements.
-// template<typename EC> 
-// void multiexp (var *out, const var *multiples, const var *scalars, size_t N) {
-//     //assert(a.size() == mul.size());
-//     typedef typename EC::group_type FieldT;
-//     size_t threads = sizeof(FieldT) == 96 ? 256 : 128;
-//     size_t blocks = min((a.size() + threads - 1) / threads, (unsigned long)256);
-//     size_t sMem = threads * sizeof(FieldT);
-    
-//     FieldT *in;
-//     CUDA_CALL( cudaMalloc((void**)&in, sizeof(FieldT) * a.size()); )
-//     CUDA_CALL( cudaMemcpy(in, (void**)&a[0], sizeof(FieldT) * a.size(), cudaMemcpyHostToDevice); )
-
-//     FieldMul *cmul;
-//     CUDA_CALL( cudaMalloc((void**)&cmul, sizeof(FieldMul) * a.size()); )
-//     CUDA_CALL( cudaMemcpy(cmul, (void**)&mul[0], sizeof(FieldMul) * a.size(), cudaMemcpyHostToDevice); )
-
-//     FieldT *temp;
-//     CUDA_CALL( cudaMalloc((void**)&temp, sizeof(FieldT) * blocks); )
-//     deviceReduceKernel<EC,FieldT,FieldT><<<blocks, threads, sMem>>>(temp, in, cmul, a.size());
-    
-//     FieldT *last;
-//     CUDA_CALL( cudaMalloc(&out, sizeof(FieldT)); )
-//     deviceReduceKernelSecond<EC,FieldT><<<1, 256, sMem>>>(last, temp, blocks);
-
-//     cudaError_t error = cudaGetLastError();
-//     if(error != cudaSuccess)
-//     {
-//         printf("CUDA error: %s\n", cudaGetErrorString(error));
-//         exit(-2);
-//     }
-
-//     //FieldT cpuResult;
-//     cudaMemcpy((void**)&out, last, sizeof(FieldT), cudaMemcpyDeviceToHost);
-//     //return cpuResult;
-// }
-
 // C is the size of the precomputation
 // R is the number of points we're handling per thread
 template< typename EC, int C = 4, int RR = 8 >
@@ -132,6 +24,7 @@ ec_multiexp_straus(var *out, const var *multiples_, const var *scalars_, size_t 
     int tileIdx = T / BIG_WIDTH;
 
     int idx = elts_per_block * B + tileIdx;
+    // printf("inside ec_multiexp_straus\n");
 
     size_t n = (N + RR - 1) / RR;
     if (idx < n) {
@@ -188,6 +81,7 @@ ec_multiexp_straus(var *out, const var *multiples_, const var *scalars_, size_t 
         }
         EC::store_jac(out + out_off, x);
     }
+   
 }
 
 template< typename EC >
@@ -247,23 +141,26 @@ template< typename EC, int C, int R >
 void
 ec_reduce_straus(cudaStream_t &strm, var *out, const var *multiples, const var *scalars, size_t N)
 {
-    cudaStreamCreate(&strm);
-
+    // cudaStreamCreate(&strm);
+    // cudaStreamCreateWithFlags(&strm, cudaStreamNonBlocking);
+    printf("got into ec_reduce_straus\n");
     static constexpr size_t pt_limbs = EC::NELTS * ELT_LIMBS;
     size_t n = (N + R - 1) / R;
 
     size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
     ec_multiexp_straus<EC, C, R><<< nblocks, threads_per_block, 0, strm>>>(out, multiples, scalars, N);
-
+    printf("finished ec_multiexp_straus call\n");
     size_t r = n & 1, m = n / 2;
     for ( ; m != 0; r = m & 1, m >>= 1) {
         nblocks = (m * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
         ec_sum_all<EC><<<nblocks, threads_per_block, 0, strm>>>(out, out + m*pt_limbs, m);
-        if (r)
+        if (r) {
             ec_sum_all<EC><<<1, threads_per_block, 0, strm>>>(out, out + 2*m*pt_limbs, 1);
+        }
     }
+    printf("finished reduce calls\n");   
 }
 
 template< typename EC >
