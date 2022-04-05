@@ -142,8 +142,12 @@ void
 ec_reduce_straus(cudaStream_t &strm, var *out, const var *multiples, const var *scalars, size_t N)
 {
     // cudaStreamCreate(&strm);
+<<<<<<< HEAD
     // cudaStreamCreateWithFlags(&strm, cudaStreamNonBlocking);
     printf("got into ec_reduce_straus\n");
+=======
+
+>>>>>>> 070c630e778d4c0f15cc89420492821af9130ea0
     static constexpr size_t pt_limbs = EC::NELTS * ELT_LIMBS;
     size_t n = (N + R - 1) / R;
 
@@ -246,10 +250,6 @@ allocate_memory_async(size_t nbytes, cudaStream_t &strm, int dbg = 0) {
     printf("nbytes: %d\n", nbytes);
     VarWithStream *var_async = new VarWithStream();
     var *mem = nullptr;
-    // printf("var_async->mem: %p\n", var_async->mem);
-    // var_async->mem = nullptr;
-    // var *mem = var_async->mem;
-    // printf("mem: %p", mem);
     cudaMallocAsync(&mem, nbytes, strm);
     if (mem == nullptr) {
         fprintf(stderr, "Failed to allocate enough device memory\n");
@@ -259,12 +259,11 @@ allocate_memory_async(size_t nbytes, cudaStream_t &strm, int dbg = 0) {
         print_meminfo(nbytes);
     // printf("var_async->mem: %p", var_async->mem);
     var_async->mem = mem;
-    // VarWithStream var_async = {.mem = mem, .stream = strm};
-    printf("mem: %p", mem);
-    printf("var_async->mem: %p", var_async->mem);
-    printf("strm: %p", strm);
+    // printf("mem: %p", mem);
+    // printf("var_async->mem: %p", var_async->mem);
+    // printf("strm: %p", strm);
     var_async->stream = strm;
-    printf("var_async->stream: %p", var_async->stream);
+    // printf("var_async->stream: %p", var_async->stream);
     return var_ptr_async(var_async);
 }
 
