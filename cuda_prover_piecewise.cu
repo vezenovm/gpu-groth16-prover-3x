@@ -342,7 +342,9 @@ void run_prover(
 
     // cudaMemcpyAsync(host_L, out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
 
-
+    cudaMemcpyAsync(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
+    cudaMemcpyAsync(host_B2, out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
+    cudaMemcpyAsync(host_L, out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
     // cudaMemcpyAsync(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
     // printf("finished B1 copy to host\n");
     // cudaMemcpyAsync(host_B2, out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
@@ -373,19 +375,19 @@ void run_prover(
 
 
     cudaStreamSynchronize(sB1);
-    cudaMemcpyAsync(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
+    // cudaMemcpyAsync(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1);
     printf("finished B1 copy to host\n");
     printf("host_B1: %d\n", (int *)host_B1 + (out_size - 96));
     G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
 
     cudaStreamSynchronize(sB2);
-    cudaMemcpyAsync(host_B2, out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
+    // cudaMemcpyAsync(host_B2, out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2);
     printf("finished B2 copy to host\n");
     printf("host_B2: %d\n", (int *)host_B2 + (out_size - 96));
     G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
 
     cudaStreamSynchronize(sL);
-    cudaMemcpyAsync(host_L, out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
+    // cudaMemcpyAsync(host_L, out_L.get(), out_size, cudaMemcpyDeviceToHost, sL);
     printf("finished ec reduce L\n");
     printf("host_L: %d\n", (int *)host_L + (out_size - 96));
     G1 *evaluation_Lt = B::read_pt_ECp(host_L);
