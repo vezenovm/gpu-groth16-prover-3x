@@ -327,21 +327,21 @@ void run_prover(
 
         cudaMemcpyAsync(B1_mults.get(), B1_mults_host + i * B1_mults_size_chunked, B1_mults_size_chunked, cudaMemcpyHostToDevice, sB1);
         cudaMemcpyAsync(w1.get(), w_host + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB1); 
-        ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w1.get(), B_m_chunked);
+        ec_reduce_straus<ECp, C, R>(sB1, out_B1.get() + i * out_size_chunked, B1_mults.get(), w1.get(), B_m_chunked);
         printf("out of ec reduce B1, on host\n");
         cudaMemcpyAsync(host_B1 + i * out_size_chunked, out_B1.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sB1);
         printf("initiated B1 copy to host\n");
 
         cudaMemcpyAsync(B2_mults.get(), B2_mults_host + i * B2_mults_size_chunked, B2_mults_size_chunked, cudaMemcpyHostToDevice, sB2);
         cudaMemcpyAsync(w2.get(), w_host2 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB2); 
-        ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get(), B2_mults.get(), w2.get(), B_m_chunked);
+        ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get() + i * out_size_chunked, B2_mults.get(), w2.get(), B_m_chunked);
         printf("out of ec reduce B2, on host\n");
         cudaMemcpyAsync(host_B2 + i * out_size_chunked, out_B2.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sB2);
         printf("initiated B2 copy to host\n");
 
         cudaMemcpyAsync(L_mults.get(), L_mults_host + i * L_mults_size_chunked, L_mults_size_chunked, cudaMemcpyHostToDevice, sL);
         cudaMemcpyAsync(w3.get(), w_host3 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sL); 
-        ec_reduce_straus<ECp, C, R>(sL, out_L.get(), L_mults.get(), w3.get() + (primary_input_size + 1) * ELT_LIMBS, L_m_chunked);
+        ec_reduce_straus<ECp, C, R>(sL, out_L.get() + i * out_size_chunked, L_mults.get(), w3.get() + (primary_input_size + 1) * ELT_LIMBS, L_m_chunked);
         printf("out of ec reduce L, on host\n");
         cudaMemcpyAsync(host_L + i * out_size_chunked, out_L.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sL);
         printf("initiated L copy to host\n");
