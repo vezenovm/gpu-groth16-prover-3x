@@ -278,6 +278,22 @@ void run_prover(
     cudaStreamCreateWithFlags(&sB1, cudaStreamNonBlocking);
     cudaStreamCreateWithFlags(&sB2, cudaStreamNonBlocking);
     cudaStreamCreateWithFlags(&sL, cudaStreamNonBlocking);
+
+    // auto w1 = allocate_memory(w_size, 1);
+    // auto w2 = allocate_memory(w_size, 1);
+    // auto w3 = allocate_memory(w_size, 1);
+
+    // printf("w1: %p\n", w1.get());
+    // printf("w2: %p\n", w2.get());
+    // printf("w3: %p\n", w3.get());
+
+    // auto B1_mults = allocate_memory(B1_mults_size, 1);
+    // auto B2_mults = allocate_memory(B2_mults_size, 1);
+    // auto L_mults = allocate_memory(L_mults_size, 1);
+
+    // printf("B1_mults: %p\n", B1_mults.get());
+    // printf("B2_mults: %p\n", B2_mults.get());
+    // printf("L_mults: %p\n", L_mults.get());
     
     size_t out_size_chunked = out_size / CHUNKS;
     printf("out_size / CHUNKS: %d\n", out_size_chunked);
@@ -294,8 +310,8 @@ void run_prover(
 
     for (int i = 0; i < CHUNKS; i++) {
         auto w1 = allocate_memory(w_size_chunked, 1);
-        auto w2 = allocate_memory(w_size, 1);
-        auto w3 = allocate_memory(w_size, 1);
+        auto w2 = allocate_memory(w_size_chunked, 1);
+        auto w3 = allocate_memory(w_size_chunked, 1);
 
         printf("w1: %p\n", w1.get());
         printf("w2: %p\n", w2.get());
