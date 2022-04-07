@@ -363,6 +363,10 @@ void run_prover(
         printf("out of ec reduce L, on host\n");
         cudaMemcpyAsync(host_L + i * out_size_chunked, out_L.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sL);
         printf("initiated L copy to host\n");
+
+        cudaStreamSynchronize(sB1);
+        cudaStreamSynchronize(sB2);
+        cudaStreamSynchronize(sL);
     }
 
     for (int i = 0; i < CHUNKS; i++) {
