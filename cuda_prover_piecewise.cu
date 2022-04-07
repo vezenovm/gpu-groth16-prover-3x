@@ -361,11 +361,14 @@ void run_prover(
         printf("initiated L copy to host\n");
     }
     int threads_per_block = 256
-    size_t n = (N + R - 1) / R;
+    size_t n = m + 1;
     size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
-    ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sB1>>>(out_B1.get(), out_B1.get() + out_size_chunked, out_size_chunked);
-    ec_sum_all<ECpe><<<nblocks, threads_per_block, 0, sB1>>>(out_B2.get(), out_B2.get() + out_size_chunked, out_size_chunked);
-    ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sB1>>>(out_L.get(), out_L.get() + out_size_chunked, out_size_chunked);
+    ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sB1>>>(out_B1.get(), out_B1.get() + (n / 2), n/2);
+    ec_sum_all<ECpe><<<nblocks, threads_per_block, 0, sB2>>>(out_B2.get(), out_B2.get() + (n / 2), n/2);
+    
+    n = m - 1;
+    nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
+    ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sBL>>>(out_L.get(), out_L.get() + (n / 2), n/2);
     // printf("about to allocate w 1\n");
     // auto w1 = allocate_memory(w_size, 1);
     // auto w2 = allocate_memory(w_size, 1);
