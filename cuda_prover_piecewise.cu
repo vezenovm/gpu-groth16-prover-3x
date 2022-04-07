@@ -310,7 +310,7 @@ void run_prover(
     // size_t L_m_chunked = (m - 1) / CHUNKS;
     // printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
     size_t m_chunked = m / CHUNKS;
-    printf("m / CHUNKS: %ld\n", L_m_chunked);
+    printf("m / CHUNKS: %ld\n", m_chunked);
     size_t B_m_chunked = m_chunked;
     size_t L_m_chunked = m_chunked;
 
@@ -319,7 +319,9 @@ void run_prover(
             size_t w_size_chunked = w_size_chunked + 1;
             printf("last w_size_chunked %ld\n", w_size_chunked);
             B_m_chunked = m_chunked + 1;
+            printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
             L_m_chunked = m_chunked + 1;
+            printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
         }
 
 
@@ -360,7 +362,7 @@ void run_prover(
         cudaMemcpyAsync(host_L + i * out_size_chunked, out_L.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sL);
         printf("initiated L copy to host\n");
     }
-    int threads_per_block = 256
+    int threads_per_block = 256;
     size_t n = m + 1;
     size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
     ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sB1>>>(out_B1.get(), out_B1.get() + (n / 2), n/2);
@@ -368,7 +370,7 @@ void run_prover(
     
     n = m - 1;
     nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
-    ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sBL>>>(out_L.get(), out_L.get() + (n / 2), n/2);
+    ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sL>>>(out_L.get(), out_L.get() + (n / 2), n/2);
     // printf("about to allocate w 1\n");
     // auto w1 = allocate_memory(w_size, 1);
     // auto w2 = allocate_memory(w_size, 1);
