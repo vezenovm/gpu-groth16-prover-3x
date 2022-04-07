@@ -320,10 +320,12 @@ void run_prover(
             printf("last w_size_chunked %ld\n", w_size_chunked);
             B_m_chunked = m_chunked + 1;
             printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
-            L_m_chunked = m_chunked + 1;
+            L_m_chunked = m_chunked - 1;
             printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
         }
-
+        printf("last w_size_chunked %ld\n", w_size_chunked);
+        printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
+        printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
 
         auto w1 = allocate_memory(w_size_chunked, 1);
         auto w2 = allocate_memory(w_size_chunked, 1);
