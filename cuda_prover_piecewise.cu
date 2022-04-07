@@ -166,7 +166,7 @@ void run_prover(
     cudaFree(0);
     size_t primary_input_size = 1;
 
-    const size_t CHUNKS = 2;
+    const size_t CHUNKS = 4;
 
     auto beginning = now();
     auto t = beginning;
