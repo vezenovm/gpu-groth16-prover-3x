@@ -166,7 +166,7 @@ void run_prover(
     cudaFree(0);
     size_t primary_input_size = 1;
 
-    const size_t CHUNKS = 4;
+    const size_t CHUNKS = 2;
 
     auto beginning = now();
     auto t = beginning;
@@ -316,8 +316,8 @@ void run_prover(
 
     for (int i = 0; i < CHUNKS; i++) {
         if (i == CHUNKS - 1) {
-            size_t w_size_chunked = w_size_chunked + 1;
-            printf("last w_size_chunked %ld\n", w_size_chunked);
+            // size_t w_size_chunked = w_size_chunked + ELT_BYTES;
+            // printf("last w_size_chunked %ld\n", w_size_chunked);
             B_m_chunked = m_chunked + 1;
             printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
             L_m_chunked = m_chunked - 1;
