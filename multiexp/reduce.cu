@@ -189,6 +189,33 @@ ec_reduce(cudaStream_t &strm, var *X, const var *w, size_t n)
     }
 }
 
+template< typename EC, int C, int R >
+void
+ec_reduce_no_multiexp(cudaStream_t &strm, var *X, size_t n)
+{
+    size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
+
+    // FIXME: Only works on Pascal and later.
+    //auto grid = cg::this_grid();
+    // ec_multiexp<EC><<< nblocks, threads_per_block, 0, strm>>>(X, w, n);
+    printf("got into ec_reduce_no_multiexp\n");
+
+    static constexpr size_t pt_limbs = EC::NELTS * ELT_LIMBS;
+    size_t n = (N + R - 1) / R;
+
+    size_t r = n & 1, m = n / 2;
+    for ( ; m != 0; r = m & 1, m >>= 1) {
+        nblocks = (m * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
+
+        ec_sum_all<EC><<<nblocks, threads_per_block, 0, strm>>>(X, X + m*pt_limbs, m);
+        if (r)
+            ec_sum_all<EC><<<1, threads_per_block, 0, strm>>>(X, X + 2*m*pt_limbs, 1);
+        // TODO: Not sure this is really necessary.
+        //grid.sync();
+    }
+    printf("finished reduce calls\n");
+}
+
 static inline double as_mebibytes(size_t n) {
     return n / (long double)(1UL << 20);
 }
