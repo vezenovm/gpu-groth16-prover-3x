@@ -191,7 +191,7 @@ ec_reduce(cudaStream_t &strm, var *X, const var *w, size_t n)
 
 template< typename EC, int C, int R >
 void
-ec_reduce_no_multiexp(cudaStream_t &strm, var *X, size_t n)
+ec_reduce_no_multiexp(cudaStream_t &strm, var *X, size_t N)
 {
     size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
