@@ -341,10 +341,12 @@ void run_prover(
 
     cudaStreamSynchronize(sB1);
     printf("synchronized sB1\n");
+    printf("host_B1: %" PRIu64 "\n", *(host_B1));
     G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
 
     cudaStreamSynchronize(sB2);
     printf("synchronized sB2\n");
+    printf("host_B1: %" PRIu64 "\n", *(host_B2));
     G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
 
     cudaStreamSynchronize(sL);
