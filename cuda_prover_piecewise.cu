@@ -386,19 +386,19 @@ void run_prover(
     printf("host_B2: %" PRIu64 "\n", *host_B2);
     printf("host_L: %" PRIu64 "\n", *host_L);
 
-    // // TODO: this is wrong, we never memcpy between host_B* result and out_B* result
-    // for (size_t i = 0; i < CHUNKS; i++) {
-    //     int threads_per_block = 256;
-    //     // size_t n = m + 1;
-    //     size_t n = out_size_chunked;
-    //     size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
-    //     ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sB1>>>(out_B1.get(), out_B1.get() + i * out_size_chunked, out_size_chunked);
-    //     ec_sum_all<ECpe><<<nblocks, threads_per_block, 0, sB2>>>(out_B2.get(), out_B2.get() + i * out_size_chunked, out_size_chunked);
+    // TODO: this is wrong, we never memcpy between host_B* result and out_B* result
+    for (size_t i = 0; i < CHUNKS; i++) {
+        int threads_per_block = 256;
+        // size_t n = m + 1;
+        size_t n = out_size_chunked;
+        size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
+        ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sB1>>>(out_B1.get(), out_B1.get() + i * out_size_chunked, out_size_chunked);
+        ec_sum_all<ECpe><<<nblocks, threads_per_block, 0, sB2>>>(out_B2.get(), out_B2.get() + i * out_size_chunked, out_size_chunked);
         
-    //     // n = m - 1;
-    //     nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
-    //     ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sL>>>(out_L.get(), out_L.get() + i * out_size_chunked, out_size_chunked);
-    // }
+        // n = m - 1;
+        nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
+        ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sL>>>(out_L.get(), out_L.get() + i * out_size_chunked, out_size_chunked);
+    }
 
     gpuErrchk( cudaMemcpyAsync(host_B1, out_B1.get(), out_size, cudaMemcpyDeviceToHost, sB1) );
     gpuErrchk( cudaMemcpyAsync(host_B2, out_B2.get(), out_size, cudaMemcpyDeviceToHost, sB2) );
