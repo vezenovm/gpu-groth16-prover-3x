@@ -13,8 +13,15 @@
 #include <libfqfft/tools/exceptions.hpp>
 #include <libfqfft/evaluation_domain/evaluation_domain.hpp>
 
-//#include "fft.cu"
-// This is where all the FFTs happen
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
 
 template <typename B>
 typename B::vector_Fr *compute_H(size_t d, typename B::vector_Fr *ca,
@@ -343,30 +350,26 @@ void run_prover(
         printf("B2_mults: %p\n", B2_mults.get());
         printf("L_mults: %p\n", L_mults.get());
 
-        cudaMemcpyAsync(B1_mults.get(), B1_mults_host + i * B1_mults_size_chunked, B1_mults_size_chunked, cudaMemcpyHostToDevice, sB1);
-        cudaMemcpyAsync(w1.get(), w_host + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB1); 
+        gpuErrchk( cudaMemcpyAsync(B1_mults.get(), B1_mults_host + i * B1_mults_size_chunked, B1_mults_size_chunked, cudaMemcpyHostToDevice, sB1) );
+        gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB1) ); 
         ec_reduce_straus<ECp, C, R>(sB1, out_B1.get() + i * out_size_chunked, B1_mults.get(), w1.get(), B_m_chunked);
         printf("out of ec reduce B1, on host\n");
-        cudaMemcpyAsync(host_B1 + i * out_size_chunked, out_B1.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sB1);
+        gpuErrchk( cudaMemcpyAsync(host_B1 + i * out_size_chunked, out_B1.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sB1) );
         printf("initiated B1 copy to host\n");
 
-        cudaMemcpyAsync(B2_mults.get(), B2_mults_host + i * B2_mults_size_chunked, B2_mults_size_chunked, cudaMemcpyHostToDevice, sB2);
-        cudaMemcpyAsync(w2.get(), w_host2 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB2); 
+        gpuErrchk( cudaMemcpyAsync(B2_mults.get(), B2_mults_host + i * B2_mults_size_chunked, B2_mults_size_chunked, cudaMemcpyHostToDevice, sB2) );
+        gpuErrchk( cudaMemcpyAsync(w2.get(), w_host2 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB2) ); 
         ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2.get() + i * out_size_chunked, B2_mults.get(), w2.get(), B_m_chunked);
         printf("out of ec reduce B2, on host\n");
-        cudaMemcpyAsync(host_B2 + i * out_size_chunked, out_B2.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sB2);
+        gpuErrchk( cudaMemcpyAsync(host_B2 + i * out_size_chunked, out_B2.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sB2) );
         printf("initiated B2 copy to host\n");
 
-        cudaMemcpyAsync(L_mults.get(), L_mults_host + i * L_mults_size_chunked, L_mults_size_chunked, cudaMemcpyHostToDevice, sL);
-        cudaMemcpyAsync(w3.get(), w_host3 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sL); 
+        gpuErrchk( cudaMemcpyAsync(L_mults.get(), L_mults_host + i * L_mults_size_chunked, L_mults_size_chunked, cudaMemcpyHostToDevice, sL) );
+        gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sL) ); 
         ec_reduce_straus<ECp, C, R>(sL, out_L.get() + i * out_size_chunked, L_mults.get(), w3.get() + (primary_input_size + 1) * ELT_LIMBS, L_m_chunked);
         printf("out of ec reduce L, on host\n");
-        cudaMemcpyAsync(host_L + i * out_size_chunked, out_L.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sL);
+        gpuErrchk( cudaMemcpyAsync(host_L + i * out_size_chunked, out_L.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sL) );
         printf("initiated L copy to host\n");
-
-        cudaStreamSynchronize(sB1);
-        cudaStreamSynchronize(sB2);
-        cudaStreamSynchronize(sL);
     }
 
     for (int i = 0; i < CHUNKS; i++) {
