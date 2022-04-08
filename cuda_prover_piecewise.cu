@@ -270,8 +270,10 @@ void run_prover(
     var *host_B1 = nullptr;
     cudaMallocHost((void **)&host_B1, out_size);
     printf("host_B1: %p\n", host_B1);
+    size_t out_size_chunked = out_size / CHUNKS;
+    printf("out_size / CHUNKS: %ld\n", out_size_chunked);
     printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + i * out_size_chunked); 
-    
+
     var *host_B2 = nullptr;
     cudaMallocHost((void **)&host_B2, out_size);
     printf("host_B2: %p\n", host_B2);
@@ -304,8 +306,6 @@ void run_prover(
     // printf("B2_mults: %p\n", B2_mults.get());
     // printf("L_mults: %p\n", L_mults.get());
     
-    size_t out_size_chunked = out_size / CHUNKS;
-    printf("out_size / CHUNKS: %ld\n", out_size_chunked);
     size_t w_size_chunked = w_size / CHUNKS;
     printf("w_size / CHUNKS: %ld\n", w_size_chunked);
     size_t B1_mults_size_chunked = B1_mults_size / CHUNKS;
