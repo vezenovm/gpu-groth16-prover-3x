@@ -14,7 +14,7 @@
 #include <libfqfft/evaluation_domain/evaluation_domain.hpp>
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=false)
 {
    if (code != cudaSuccess) 
    {
@@ -354,7 +354,7 @@ void run_prover(
         gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB1) ); 
         ec_reduce_straus<ECp, C, R>(sB1, out_B1.get() + i * out_size_chunked, B1_mults.get(), w1.get(), B_m_chunked);
         printf("out of ec reduce B1, on host\n");
-        gpuErrchk( cudaMemcpyAsync(host_B1 + i * out_size_chunked, out_B1.get() + i * out_size_chunked, out_size_chunked, cudaMemcpyDeviceToHost, sB1) );
+        gpuErrchk( cudaMemcpyAsync(host_B1 + i * out_size_chunked, out_B1.get() + i * out_size_chunked, out_size_chunked - 1, cudaMemcpyDeviceToHost, sB1) );
         printf("initiated B1 copy to host\n");
 
         gpuErrchk( cudaMemcpyAsync(B2_mults.get(), B2_mults_host + i * B2_mults_size_chunked, B2_mults_size_chunked, cudaMemcpyHostToDevice, sB2) );
