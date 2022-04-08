@@ -193,7 +193,6 @@ template< typename EC, int C, int R >
 void
 ec_reduce_no_multiexp(cudaStream_t &strm, var *X, size_t N)
 {
-    size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
     // FIXME: Only works on Pascal and later.
     //auto grid = cg::this_grid();
@@ -202,6 +201,7 @@ ec_reduce_no_multiexp(cudaStream_t &strm, var *X, size_t N)
 
     static constexpr size_t pt_limbs = EC::NELTS * ELT_LIMBS;
     size_t n = (N + R - 1) / R;
+    size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
     size_t r = n & 1, m = n / 2;
     for ( ; m != 0; r = m & 1, m >>= 1) {
