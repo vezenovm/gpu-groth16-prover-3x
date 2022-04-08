@@ -244,6 +244,7 @@ void run_prover(
     // auto B1_mults = load_points_affine_async<ECp>(sB1, ((1U << C) - 1)*(m + 1), preprocessed_file);
     // auto out_B1 = allocate_memory_async(sB1, out_size);
     auto out_B1 = allocate_memory(out_size, 1);
+    printf("out_size: %ld\n", out_size);
     printf("B1_mults_host: %p\n", B1_mults_host);
     printf("out_B1: %p\n", out_B1.get());
 
@@ -354,6 +355,8 @@ void run_prover(
         gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB1) ); 
         ec_reduce_straus<ECp, C, R>(sB1, out_B1.get() + i * out_size_chunked, B1_mults.get(), w1.get(), B_m_chunked);
         printf("out of ec reduce B1, on host\n");
+        printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + i * out_size_chunked);
+        printf("out_B1.get() + i * out_size_chunked: %p\n", out_B1.get() + i * out_size_chunked); 
         gpuErrchk( cudaMemcpyAsync(host_B1 + i * out_size_chunked, out_B1.get() + i * out_size_chunked, out_size_chunked - 1, cudaMemcpyDeviceToHost, sB1) );
         printf("initiated B1 copy to host\n");
 
