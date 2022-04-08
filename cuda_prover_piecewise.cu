@@ -463,17 +463,17 @@ void run_prover(
 
     cudaStreamSynchronize(sB1);
     printf("synchronized sB1\n");
-    printf("host_B1: %" PRIu64 "\n", *(host_B1 + (out_size - 96));
+    printf("host_B1: %" PRIu64 "\n", *(host_B1 + (out_size - 96)));
     G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
 
     cudaStreamSynchronize(sB2);
     printf("synchronized sB2\n");
-    printf("host_B2: %" PRIu64 "\n", *(host_B2 + (out_size - 96));
+    printf("host_B2: %" PRIu64 "\n", *(host_B2 + (out_size - 96)));
     G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
 
     cudaStreamSynchronize(sL);
     printf("synchronized sL\n");
-    printf("host_L: %" PRIu64 "\n", *(host_L + (out_size - 96));
+    printf("host_L: %" PRIu64 "\n", *(host_L + (out_size - 96)));
     G1 *evaluation_Lt = B::read_pt_ECp(host_L);
 
     print_time(t_gpu, "gpu e2e");
