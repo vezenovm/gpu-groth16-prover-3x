@@ -270,7 +270,8 @@ void run_prover(
     var *host_B1 = nullptr;
     cudaMallocHost((void **)&host_B1, out_size);
     printf("host_B1: %p\n", host_B1);
-
+    printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + i * out_size_chunked); 
+    
     var *host_B2 = nullptr;
     cudaMallocHost((void **)&host_B2, out_size);
     printf("host_B2: %p\n", host_B2);
