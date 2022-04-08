@@ -353,7 +353,7 @@ void run_prover(
         printf("L_mults: %p\n", L_mults.get());
 
         // Need to do this because we are working with var * types that index 8 bytes at a time
-        size_t out_size_scaled = (i * out_size_chunked) / 8
+        size_t out_size_scaled = (i * out_size_chunked) / 8;
 
         gpuErrchk( cudaMemcpyAsync(B1_mults.get(), B1_mults_host + i * B1_mults_size_chunked, B1_mults_size_chunked, cudaMemcpyHostToDevice, sB1) );
         printf("w_host + i * w_size_chunked: %p\n", w_host + i * w_size_chunked);
