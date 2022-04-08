@@ -441,9 +441,7 @@ void run_prover(
     // ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w1.get(), m + 1);
     // printf("out of ec reduce B1, on host\n");
 
-    printf("host_B1: %" PRIu64 "\n", *host_B1);
-    printf("host_B2: %" PRIu64 "\n", *host_B2);
-    printf("host_L: %" PRIu64 "\n", *host_L);
+
 
     print_time(t, "gpu launch");
 
@@ -465,14 +463,17 @@ void run_prover(
 
     cudaStreamSynchronize(sB1);
     printf("synchronized sB1\n");
+    printf("host_B1: %" PRIu64 "\n", *(host_B1 + (out_size - 96));
     G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
 
     cudaStreamSynchronize(sB2);
     printf("synchronized sB2\n");
+    printf("host_B2: %" PRIu64 "\n", *(host_B2 + (out_size - 96));
     G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
 
     cudaStreamSynchronize(sL);
     printf("synchronized sL\n");
+    printf("host_L: %" PRIu64 "\n", *(host_L + (out_size - 96));
     G1 *evaluation_Lt = B::read_pt_ECp(host_L);
 
     print_time(t_gpu, "gpu e2e");
