@@ -1,5 +1,6 @@
 #include <string>
 #include <chrono>
+#include <inttypes.h>
 
 #define NDEBUG 1
 
