@@ -6,3 +6,10 @@ build
 main
 generate_parameters
 cuda_prover_piecewise
+MNT4753-output 
+MNT6753-output 
+MNT4753-output_cuda
+MNT6753-output_cuda
+MNT4753_preprocessed
+MNT6753_preprocessed
+.vscode

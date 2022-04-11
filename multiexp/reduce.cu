@@ -6,6 +6,13 @@
 
 #include "curves.cu"
 
+#define CUDA_CALL( call )               \
+{                                       \
+cudaError_t result = call;              \
+if ( cudaSuccess != result )            \
+    std::cerr << "CUDA error " << result << " in " << __FILE__ << ":" << __LINE__ << ": " << cudaGetErrorString( result ) << " (" << #call << ")" << std::endl;  \
+}
+
 // C is the size of the precomputation
 // R is the number of points we're handling per thread
 template< typename EC, int C = 4, int RR = 8 >
@@ -17,6 +24,7 @@ ec_multiexp_straus(var *out, const var *multiples_, const var *scalars_, size_t 
     int tileIdx = T / BIG_WIDTH;
 
     int idx = elts_per_block * B + tileIdx;
+    // printf("inside ec_multiexp_straus\n");
 
     size_t n = (N + RR - 1) / RR;
     if (idx < n) {
@@ -73,6 +81,7 @@ ec_multiexp_straus(var *out, const var *multiples_, const var *scalars_, size_t 
         }
         EC::store_jac(out + out_off, x);
     }
+   
 }
 
 template< typename EC >
@@ -132,23 +141,26 @@ template< typename EC, int C, int R >
 void
 ec_reduce_straus(cudaStream_t &strm, var *out, const var *multiples, const var *scalars, size_t N)
 {
-    cudaStreamCreate(&strm);
-
+    // cudaStreamCreate(&strm);
+    // cudaStreamCreateWithFlags(&strm, cudaStreamNonBlocking);
+    printf("got into ec_reduce_straus\n");
     static constexpr size_t pt_limbs = EC::NELTS * ELT_LIMBS;
     size_t n = (N + R - 1) / R;
 
     size_t nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
     ec_multiexp_straus<EC, C, R><<< nblocks, threads_per_block, 0, strm>>>(out, multiples, scalars, N);
-
+    printf("finished ec_multiexp_straus call\n");
     size_t r = n & 1, m = n / 2;
     for ( ; m != 0; r = m & 1, m >>= 1) {
         nblocks = (m * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
         ec_sum_all<EC><<<nblocks, threads_per_block, 0, strm>>>(out, out + m*pt_limbs, m);
-        if (r)
+        if (r) {
             ec_sum_all<EC><<<1, threads_per_block, 0, strm>>>(out, out + 2*m*pt_limbs, 1);
+        }
     }
+    printf("finished reduce calls\n");   
 }
 
 template< typename EC >
@@ -196,9 +208,35 @@ struct CudaFree {
 typedef std::unique_ptr<var, CudaFree> var_ptr;
 
 var_ptr
-allocate_memory(size_t nbytes, int dbg = 0) {
+allocate_memory_managed(size_t nbytes, int dbg = 0) {
     var *mem = nullptr;
     cudaMallocManaged(&mem, nbytes);
+    if (mem == nullptr) {
+        fprintf(stderr, "Failed to allocate enough device memory\n");
+        abort();
+    }
+    if (dbg)
+        print_meminfo(nbytes);
+    return var_ptr(mem);
+}
+
+var_ptr
+allocate_memory(size_t nbytes, int dbg = 0) {
+    var *mem = nullptr;
+    cudaMalloc(&mem, nbytes);
+    if (mem == nullptr) {
+        fprintf(stderr, "Failed to allocate enough device memory\n");
+        abort();
+    }
+    if (dbg)
+        print_meminfo(nbytes);
+    return var_ptr(mem);
+}
+
+var_ptr
+allocate_memory_async(cudaStream_t &strm, size_t nbytes, int dbg = 0) {
+    var *mem = nullptr;
+    cudaMallocAsync(&mem, nbytes, strm);
     if (mem == nullptr) {
         fprintf(stderr, "Failed to allocate enough device memory\n");
         abort();
@@ -213,12 +251,36 @@ load_scalars(size_t n, FILE *inputs)
 {
     static constexpr size_t scalar_bytes = ELT_BYTES;
     size_t total_bytes = n * scalar_bytes;
+    printf("total scalar bytes: %zu\n", total_bytes);
+    auto mem = allocate_memory(total_bytes, 1);
 
-    auto mem = allocate_memory(total_bytes);
-    if (fread((void *)mem.get(), total_bytes, 1, inputs) < 1) {
+    void *scalars_buffer = (void *) malloc (total_bytes);
+    if (fread(scalars_buffer, total_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read scalars\n");
         abort();
     }
+    cudaMemcpy(mem.get(), scalars_buffer, total_bytes, cudaMemcpyHostToDevice); 
+    free(scalars_buffer);
+    return mem;
+}
+
+var_ptr
+load_scalars_async(cudaStream_t &strm, size_t n, FILE *inputs)
+{
+    //cudaStreamCreate(&strm);
+    static constexpr size_t scalar_bytes = ELT_BYTES;
+    size_t total_bytes = n * scalar_bytes;
+    printf("total scalar bytes: %zu\n", total_bytes);
+    // auto mem = allocate_memory_async(strm, total_bytes, 1);
+    auto mem = allocate_memory(total_bytes, 1);
+
+    void *scalars_buffer = (void *) malloc (total_bytes);
+    if (fread(scalars_buffer, total_bytes, 1, inputs) < 1) {
+        fprintf(stderr, "Failed to read scalars\n");
+        abort();
+    }
+    cudaMemcpyAsync(mem.get(), scalars_buffer, total_bytes, cudaMemcpyHostToDevice, strm); 
+    free(scalars_buffer);
     return mem;
 }
 
@@ -261,11 +323,48 @@ load_points_affine(size_t n, FILE *inputs)
     static constexpr size_t aff_pt_bytes = 2 * coord_bytes;
 
     size_t total_aff_bytes = n * aff_pt_bytes;
+    printf("total affine bytes: %zu\n", total_aff_bytes);
+    auto mem = allocate_memory(total_aff_bytes, 1);
 
-    auto mem = allocate_memory(total_aff_bytes);
-    if (fread((void *)mem.get(), total_aff_bytes, 1, inputs) < 1) {
+    void *aff_bytes_buffer = (void *) malloc (total_aff_bytes);
+    if (fread(aff_bytes_buffer, total_aff_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read all curve poinst\n");
         abort();
     }
+    //printf("aff_bytes_buffer: %p\n", aff_bytes_buffer);
+    cudaMemcpy(mem.get(), aff_bytes_buffer, total_aff_bytes, cudaMemcpyHostToDevice); 
+    //printf("mem in load_points_affine after cudaMemcpy: %zu\n", mem.get());
+    free(aff_bytes_buffer);
     return mem;
 }
+
+template< typename EC >
+var_ptr
+load_points_affine_async(cudaStream_t &strm, size_t n, FILE *inputs)
+{
+    typedef typename EC::field_type FF;
+
+    static constexpr size_t coord_bytes = FF::DEGREE * ELT_BYTES;
+    static constexpr size_t aff_pt_bytes = 2 * coord_bytes;
+
+    size_t total_aff_bytes = n * aff_pt_bytes;
+    printf("total affine bytes: %zu\n", total_aff_bytes);
+
+    // void *aff_bytes_buffer = (void *) malloc (total_aff_bytes);
+    void *aff_bytes_buffer;
+    cudaMallocHost((void **)&aff_bytes_buffer, total_aff_bytes);
+    if (fread(aff_bytes_buffer, total_aff_bytes, 1, inputs) < 1) {
+        fprintf(stderr, "Failed to read all curve poinst\n");
+        abort();
+    }
+    cudaStreamCreateWithFlags(&strm, cudaStreamNonBlocking);
+    // auto mem = allocate_memory_async(strm, total_aff_bytes, 1);
+    auto mem = allocate_memory(total_aff_bytes, 1);
+
+    //printf("aff_bytes_buffer: %p\n", aff_bytes_buffer);
+    cudaMemcpyAsync(mem.get(), aff_bytes_buffer, total_aff_bytes, cudaMemcpyHostToDevice, strm); 
+    //printf("mem in load_points_affine after cudaMemcpy: %zu\n", mem.get());
+    // cudaFreeHost(aff_bytes_buffer);
+    // free(aff_bytes_buffer);
+    return mem;
+} 
