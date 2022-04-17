@@ -241,38 +241,38 @@ void run_prover(
     printf("about to allocate B1\n");
 
     void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
-    // auto B1_mults = load_points_affine_async<ECp>(sB1, ((1U << C) - 1)*(m + 1), preprocessed_file);
-    // auto out_B1 = allocate_memory_async(sB1, out_size);
-    auto out_B1 = allocate_memory(out_size, 1);
-    printf("out_size: %ld\n", out_size);
     printf("B1_mults_host: %p\n", B1_mults_host);
-    printf("out_B1: %p\n", out_B1.get());
+
 
     printf("about to allocate B2\n");
 
     void *B2_mults_host = load_points_affine_host<ECpe>(((1U << C) - 1)*(m + 1), preprocessed_file);
-    // auto B2_mults = load_points_affine_async<ECpe>(sB2, ((1U << C) - 1)*(m + 1), preprocessed_file);
-    // auto out_B2 = allocate_memory_async(sB2, out_size);
-    auto out_B2 = allocate_memory(out_size, 1);
-    printf("B2_mults_host: %p\n", B2_mults_host);
-    printf("out_B2: %p\n", out_B2.get());
 
     printf("about to allocate L\n");
     void *L_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
-    // auto L_mults = load_points_affine_async<ECp>(sL, ((1U << C) - 1)*(m - 1), preprocessed_file);
-    // auto out_L = allocate_memory_async(sL, out_size);
-    auto out_L = allocate_memory(out_size, 1);
-    printf("L_mults_host: %p\n", L_mults_host);
-    printf("out_L: %p\n", out_L.get());
 
     fclose(preprocessed_file);
+
+    size_t out_size_chunked = out_size * CHUNKS;
+    // size_t out_size_chunked = out_size / CHUNKS;
+    printf("out_size * CHUNKS: %ld\n", out_size_chunked);
+
+    auto out_B1 = allocate_memory(out_size_chunked, 1);
+    printf("out_size: %ld\n", out_size);
+    printf("out_B1: %p\n", out_B1.get());
+
+    auto out_B2 = allocate_memory(out_size_chunked, 1);
+    printf("B2_mults_host: %p\n", B2_mults_host);
+    printf("out_B2: %p\n", out_B2.get());
+
+    auto out_L = allocate_memory(out_size_chunked, 1);
+    printf("L_mults_host: %p\n", L_mults_host);
+    printf("out_L: %p\n", out_L.get());
     
     var *host_B1 = nullptr;
     cudaMallocHost((void **)&host_B1, out_size);
     printf("host_B1: %p\n", host_B1);
-    size_t out_size_chunked = out_size / CHUNKS;
-    printf("out_size / CHUNKS: %ld\n", out_size_chunked);
-    printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + 1 * out_size_chunked); 
+    // printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + 1 * out_size_chunked); 
 
     var *host_B2 = nullptr;
     cudaMallocHost((void **)&host_B2, out_size);
@@ -353,7 +353,7 @@ void run_prover(
         printf("L_mults: %p\n", L_mults.get());
 
         // Need to do this because we are working with var * types that index 8 bytes at a time
-        size_t out_size_scaled = (i * out_size_chunked) / 8;
+        size_t out_size_scaled = (i * out_size) / 8;
 
         gpuErrchk( cudaMemcpyAsync(B1_mults.get(), B1_mults_host + i * B1_mults_size_chunked, B1_mults_size_chunked, cudaMemcpyHostToDevice, sB1) );
         printf("w_host + i * w_size_chunked: %p\n", w_host + i * w_size_chunked);
@@ -386,9 +386,19 @@ void run_prover(
     printf("host_B2: %" PRIu64 "\n", *host_B2);
     printf("host_L: %" PRIu64 "\n", *host_L);
 
-    ec_reduce_no_multiexp<ECp, C, R>(sB1, out_B1.get(), m+1);
-    ec_reduce_no_multiexp<ECpe, C, 2*R>(sB2, out_B2.get(), m+1);
-    ec_reduce_no_multiexp<ECp, C, R>(sL, out_L.get(), m-1);
+    for (size_t i = 0; i < CHUNKS; i++) {
+        size_t out_size_scaled = (i * out_size) / 8;
+        // ec_reduce_no_multiexp<ECp, C, R>(sB1, out_B1.get() + , m+1);
+        // ec_reduce_no_multiexp<ECpe, C, 2*R>(sB2, out_B2.get(), m+1);
+        // ec_reduce_no_multiexp<ECp, C, R>(sL, out_L.get(), m-1);
+
+        ec_sum_all<EC><<<nblocks, threads_per_block, 0, sB1>>>(out_B1.get(), out + out_size_scaled, out_size);
+        ec_sum_all<EC><<<nblocks, threads_per_block, 0, sB2>>>(out_B2.get(), out + out_size_scaled, out_size);
+        ec_sum_all<EC><<<nblocks, threads_per_block, 0, sL>>>(out_L.get(), out + out_size_scaled, out_size);
+
+    }
+
+
 
     // TODO: this is wrong, we never memcpy between host_B* result and out_B* result
     // for (size_t i = 0; i < CHUNKS; i++) {
