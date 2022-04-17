@@ -386,15 +386,16 @@ void run_prover(
     printf("host_B2: %" PRIu64 "\n", *host_B2);
     printf("host_L: %" PRIu64 "\n", *host_L);
 
+    static constexpr size_t threads_per_block = 256;
     for (size_t i = 0; i < CHUNKS; i++) {
         size_t out_size_scaled = (i * out_size) / 8;
         // ec_reduce_no_multiexp<ECp, C, R>(sB1, out_B1.get() + , m+1);
         // ec_reduce_no_multiexp<ECpe, C, 2*R>(sB2, out_B2.get(), m+1);
         // ec_reduce_no_multiexp<ECp, C, R>(sL, out_L.get(), m-1);
 
-        ec_sum_all<EC><<<nblocks, threads_per_block, 0, sB1>>>(out_B1.get(), out + out_size_scaled, out_size);
-        ec_sum_all<EC><<<nblocks, threads_per_block, 0, sB2>>>(out_B2.get(), out + out_size_scaled, out_size);
-        ec_sum_all<EC><<<nblocks, threads_per_block, 0, sL>>>(out_L.get(), out + out_size_scaled, out_size);
+        ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sB1>>>(out_B1.get(), out_B1.get() + out_size_scaled, out_size);
+        ec_sum_all<ECpe><<<nblocks, threads_per_block, 0, sB2>>>(out_B2.get(), out_B2.get() + out_size_scaled, out_size);
+        ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sL>>>(out_L.get(), out_L.get() + out_size_scaled, out_size);
 
     }
 
