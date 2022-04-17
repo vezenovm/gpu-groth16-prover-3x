@@ -392,6 +392,7 @@ void run_prover(
         // ec_reduce_no_multiexp<ECp, C, R>(sB1, out_B1.get() + , m+1);
         // ec_reduce_no_multiexp<ECpe, C, 2*R>(sB2, out_B2.get(), m+1);
         // ec_reduce_no_multiexp<ECp, C, R>(sL, out_L.get(), m-1);
+        size_t nblocks = (out_size * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
         ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sB1>>>(out_B1.get(), out_B1.get() + out_size_scaled, out_size);
         ec_sum_all<ECpe><<<nblocks, threads_per_block, 0, sB2>>>(out_B2.get(), out_B2.get() + out_size_scaled, out_size);
