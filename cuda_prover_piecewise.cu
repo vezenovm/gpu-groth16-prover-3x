@@ -343,13 +343,13 @@ void run_prover(
     size_t B_m_chunked = m_chunked;
     size_t L_m_chunked = m_chunked;
 
-    auto x = w_host;
-    size_t testi = 0;
-    while (x != nullptr) {
-        x = x + testi;
-        testi++;
-    }
-    printf("testi: %ld\n", testi);
+    // auto x = w_host;
+    // size_t testi = 0;
+    // while (x != nullptr) {
+    //     x = x + testi;
+    //     testi++;
+    // }
+    // printf("testi: %ld\n", testi);
 
     // TODO: do the same thing with the offsets as the chunks amounts so that we don't have to encapsulate all the CUDA calls in big IF statements
     // size_t w_offset_B_m = 
