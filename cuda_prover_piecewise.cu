@@ -420,12 +420,23 @@ void run_prover(
                 get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunked), 
                 cudaMemcpyHostToDevice, 
                 sB2) );
+
+            gpuErrchk( 
+                cudaMemcpyAsync(L_mults.get(), 
+                L_mults_host + get_aff_total_bytes<ECpe>(((1U << C) - 1)* i * (L_m_chunked + 1)), 
+                get_aff_total_bytes<ECpe>(((1U << C) - 1)*L_m_chunked), 
+                cudaMemcpyHostToDevice, 
+                sL) );
+
             
             
             printf("i * (B_m_chunked - 1) * ELT_BYTES: %p\n", (i * (B_m_chunked - 1) * ELT_BYTES));
             printf("w_host + (i * (B_m_chunked - 1) * ELT_BYTES): %p\n", w_host + (i * (B_m_chunked - 1) * ELT_BYTES));
             gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + (i * (B_m_chunked - 1) * ELT_BYTES), B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB1) ); 
             gpuErrchk( cudaMemcpyAsync((void *)w2.get(), w_host2 + (i * (B_m_chunked - 1) * ELT_BYTES), B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB2) ); 
+
+            gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + ((2+(i * (L_m_chunked + 1))) * ELT_BYTES), L_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sL) ); 
+
         } else {
             gpuErrchk( 
                 cudaMemcpyAsync(B1_mults.get(), 
@@ -440,8 +451,18 @@ void run_prover(
                 cudaMemcpyHostToDevice, 
                 sB2) );
 
+            gpuErrchk( 
+                cudaMemcpyAsync(L_mults.get(), 
+                L_mults_host + get_aff_total_bytes<ECpe>(((1U << C) - 1)* i * L_m_chunked), 
+                get_aff_total_bytes<ECpe>(((1U << C) - 1)*L_m_chunked), 
+                cudaMemcpyHostToDevice, 
+                sL) );
+
             gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + (i * (B_m_chunked) * ELT_BYTES), B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB1) ); 
-            gpuErrchk( cudaMemcpyAsync(w2.get(), w_host2 + (i * (B_m_chunked) * ELT_BYTES), B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB2) ); 
+            gpuErrchk( cudaMemcpyAsync(w2.get(), w_host2 + (i * (B_m_chunked) * ELT_BYTES), B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB2) );
+
+            gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + ((2+(i * L_m_chunked)) * ELT_BYTES), L_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sL) ); 
+
         }
         ec_reduce_straus<ECp, C, R>(sB1, out_B1[i].get(), B1_mults.get(), w1.get(), B_m_chunked);
         printf("out of ec reduce B1, on host\n");
@@ -460,15 +481,16 @@ void run_prover(
         printf("initiated B2 copy to host\n");
 
         // gpuErrchk( cudaMemcpyAsync(L_mults.get(), L_mults_host + (i * L_m_chunked * 2) * ELT_BYTES, 2 * L_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sL) );
-        gpuErrchk( cudaMemcpyAsync(L_mults.get(), L_mults_host + get_aff_total_bytes<ECpe>(((1U << C) - 1)*i * L_m_chunked), get_aff_total_bytes<ECpe>(((1U << C) - 1)*L_m_chunked), cudaMemcpyHostToDevice, sL) );
+        // gpuErrchk( cudaMemcpyAsync(L_mults.get(), L_mults_host + get_aff_total_bytes<ECpe>(((1U << C) - 1)*i * L_m_chunked), get_aff_total_bytes<ECpe>(((1U << C) - 1)*L_m_chunked), cudaMemcpyHostToDevice, sL) );
         // gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sL) ); 
         printf("w_host3: %p\n", w_host3);
         printf("w_host3 + (2+(i * L_m_chunked)) * ELT_BYTES: %p\n", w_host3 + (2+(i * L_m_chunked)) * ELT_BYTES);
-        gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + ((2+(i * L_m_chunked)) * ELT_BYTES), L_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sL) ); 
+        // gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + ((2+(i * L_m_chunked)) * ELT_BYTES), L_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sL) ); 
         // NOTE: it is only + (2 * ELT_LIMBS) as w3 is a var * that jumps by 64 bits. 12 * 64 = 768 bit element
         printf("w3.get(): %p\n", w3.get());
         printf("w3.get() + (primary_input_size + 1) * ELT_LIMBS: %p\n", w3.get() + (primary_input_size + 1) * ELT_LIMBS);
-        ec_reduce_straus<ECp, C, R>(sL, out_L[i].get(), L_mults.get(), w3.get() + (primary_input_size + 1) * ELT_LIMBS, L_m_chunked);
+        ec_reduce_straus<ECp, C, R>(sL, out_L[i].get(), L_mults.get(), w3.get(), L_m_chunked);
+        // ec_reduce_straus<ECp, C, R>(sL, out_L[i].get(), L_mults.get(), w3.get() + (primary_input_size + 1) * ELT_LIMBS, L_m_chunked);
         printf("out of ec reduce L, on host\n");
         gpuErrchk( cudaMemcpyAsync(host_L[i], out_L[i].get(), out_size, cudaMemcpyDeviceToHost, sL) );
         printf("initiated L copy to host\n");
