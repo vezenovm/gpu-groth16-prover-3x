@@ -144,7 +144,7 @@ load_points_affine_host(size_t n, FILE *inputs)
         fprintf(stderr, "Failed to read all curve poinst\n");
         abort();
     }
-    printf("aff_bytes_buffer: %d\n", (int *)aff_bytes_buffer + (total_aff_bytes - 96));
+    // printf("aff_bytes_buffer: %d\n", (int *)aff_bytes_buffer + (total_aff_bytes - 96));
 
     return aff_bytes_buffer;
 }
@@ -233,6 +233,9 @@ void run_prover(
     size_t B1_mults_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1));
     size_t B2_mults_size = get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1));
     size_t L_mults_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1));
+    printf("B1_mults_size: %ld\n", B1_mults_size);
+    printf("B1_mults_size: %ld\n", B2_mults_size);
+    printf("B1_mults_size: %ld\n", L_mults_size);
 
     // Previous location for where memory was declared
     // auto A_mults = load_points_affine_async<ECp>(sA, ((1U << C) - 1)*(m + 1), preprocessed_file);
@@ -241,7 +244,7 @@ void run_prover(
     printf("about to allocate B1\n");
 
     void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
-    printf("B1_mults_host: %p\n", B1_mults_host);
+    // printf("B1_mults_host: %p\n", B1_mults_host);
 
 
     printf("about to allocate B2\n");
@@ -273,13 +276,13 @@ void run_prover(
         out_L[i] = allocate_memory(out_size, 1);
 
         cudaMallocHost((void **)&host_B1[i], out_size);
-        printf("host_B1: %p\n", host_B1[i]);
+        // printf("host_B1: %p\n", host_B1[i]);
 
         cudaMallocHost((void **)&host_B2[i], out_size);
-        printf("host_B2: %p\n", host_B2[i]);
+        // printf("host_B2: %p\n", host_B2[i]);
 
         cudaMallocHost((void **)&host_L[i], out_size);
-        printf("host_L: %p\n", host_L[i]);
+        // printf("host_L: %p\n", host_L[i]);
     }
     printf("finished allocating out ptrs\n");
 
@@ -388,7 +391,7 @@ void run_prover(
         gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB1) ); 
         ec_reduce_straus<ECp, C, R>(sB1, out_B1[i].get(), B1_mults.get(), w1.get(), B_m_chunked);
         printf("out of ec reduce B1, on host\n");
-        // printf("i * out_chunked: %ld\n", i * out_size_chunked);
+        printf("i * B1_mults_size_chunked: %ld\n", i * B1_mults_size_chunked);
         // printf("out_size_scaled: %ld\n", out_size_scaled);
         // printf("host_B1 + out_size_scaled: %p\n", host_B1 + out_size_scaled);
         // printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + i * out_size_chunked);
@@ -537,10 +540,12 @@ void run_prover(
     G1 *evaluation_Lt = L_evaluations[0];
     for (size_t i = 1; i < CHUNKS; i++) {
         evaluation_Bt1 = B::G1_add(evaluation_Bt1, B1_evaluations[i]);
+        B::print_G1(evaluation_Bt1);
         evaluation_Bt2 = B::G2_add(evaluation_Bt2, B2_evaluations[i]);
+        B::print_G2(evaluation_Bt2);
         evaluation_Lt = B::G1_add(evaluation_Lt, L_evaluations[i]);
+        B::print_G1(evaluation_Lt);
     }
-    B::print_G1(evaluation_Bt1);
 
     print_time(t_gpu, "gpu e2e");
 
