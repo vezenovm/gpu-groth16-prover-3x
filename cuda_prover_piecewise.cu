@@ -258,9 +258,9 @@ void run_prover(
     printf("out_size * CHUNKS: %ld\n", out_size_chunked);
 
     // Each of the CHUNK'd arrays is an output of a multiexponentation 
-    var_ptr out_B1[CHUNKS]
-    var_ptr out_B2[CHUNKS]
-    var_ptr out_L[CHUNKS]
+    var_ptr out_B1[CHUNKS];
+    var_ptr out_B2[CHUNKS];
+    var_ptr out_L[CHUNKS];
     printf("about to allocate out ptrs\n");
     for (size_t i = 0; i < CHUNKS; i++) {
         out_B1[i] = allocate_memory(out_size, 1);
