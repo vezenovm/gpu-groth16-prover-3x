@@ -173,7 +173,7 @@ void run_prover(
     cudaFree(0);
     size_t primary_input_size = 1;
 
-    const size_t CHUNKS = 2;
+    const size_t CHUNKS = 4;
 
     auto beginning = now();
     auto t = beginning;
@@ -391,7 +391,7 @@ void run_prover(
         // TODO: try it with get_aff_total_bytes
         gpuErrchk( cudaMemcpyAsync(B1_mults.get(), B1_mults_host + get_aff_total_bytes<ECp>(i * B_m_chunked), get_aff_total_bytes<ECp>(B_m_chunked), cudaMemcpyHostToDevice, sB1) );
         printf("w_host: %p\n", w_host);
-        printf("w_host + (i * B_m_chunked) * ELT_BYTES: %p\n", w_host + (i * B_m_chunked - 1) * ELT_BYTES);
+        printf("w_host + (i * B_m_chunked - 1) * ELT_BYTES: %p\n", w_host + (i * B_m_chunked - 1) * ELT_BYTES);
         printf("B_m_chunked * ELT_BYTES: %ld\n", B_m_chunked * ELT_BYTES);
         if (i == CHUNKS - 1) {
             printf("w_host + (i * B_m_chunked - 1) * ELT_BYTES: %p\n", w_host + (i * B_m_chunked - 1) * ELT_BYTES);
