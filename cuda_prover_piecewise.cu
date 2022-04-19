@@ -511,6 +511,7 @@ void run_prover(
     G1 *B1_evaluations[CHUNKS];
     for (size_t i = 0; i < CHUNKS; i++) {
         B1_evaluations[i] = B::read_pt_ECp(host_B1[i]);
+        B::print_G1(B1_evaluations[i]);
     }
 
     cudaStreamSynchronize(sB2);
@@ -539,6 +540,7 @@ void run_prover(
         evaluation_Bt2 = B::G2_add(evaluation_Bt2, B2_evaluations[i]);
         evaluation_Lt = B::G1_add(evaluation_Lt, L_evaluations[i]);
     }
+    B::print_G1(evaluation_Bt1);
 
     print_time(t_gpu, "gpu e2e");
 
