@@ -401,7 +401,7 @@ void run_prover(
         gpuErrchk( cudaMemcpyAsync(w2.get(), w_host2 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB2) ); 
         ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2[i].get(), B2_mults.get(), w2.get(), B_m_chunked);
         printf("out of ec reduce B2, on host\n");
-        gpuErrchk( cudaMemcpyAsync(host_B2[i], out_B2[i]get(), out_size, cudaMemcpyDeviceToHost, sB2) );
+        gpuErrchk( cudaMemcpyAsync(host_B2[i], out_B2[i].get(), out_size, cudaMemcpyDeviceToHost, sB2) );
         printf("initiated B2 copy to host\n");
 
         gpuErrchk( cudaMemcpyAsync(L_mults.get(), L_mults_host + i * L_mults_size_chunked, L_mults_size_chunked, cudaMemcpyHostToDevice, sL) );
@@ -533,11 +533,11 @@ void run_prover(
     
     G1 *evaluation_Bt1 = B1_evaluations[0];
     G2 *evaluation_Bt2 = B2_evaluations[0];
-    G1 *evaluation_L = L_evaluations[0];
+    G1 *evaluation_Lt = L_evaluations[0];
     for (size_t i = 1; i < CHUNKS; i++) {
         evaluation_Bt1 = B::G1_add(evaluation_Bt1, B1_evaluations[i]);
         evaluation_Bt2 = B::G2_add(evaluation_Bt2, B2_evaluations[i]);
-        evaluation_L = B::G1_add(evaluation_Lt, L_evaluations[i]);
+        evaluation_Lt = B::G1_add(evaluation_Lt, L_evaluations[i]);
     }
 
     print_time(t_gpu, "gpu e2e");
