@@ -158,7 +158,7 @@ get_aff_total_bytes(size_t n)
     static constexpr size_t coord_bytes = FF::DEGREE * ELT_BYTES;
     static constexpr size_t aff_pt_bytes = 2 * coord_bytes;
     size_t total_aff_bytes = n * aff_pt_bytes;
-    printf("total affine bytes for %ld points: %zu\n", n, total_aff_bytes);
+    // printf("total affine bytes for %ld points: %zu\n", n, total_aff_bytes);
     return total_aff_bytes;
 }
 
@@ -370,9 +370,9 @@ void run_prover(
         // auto w2 = allocate_memory(w_size_chunked, 1);
         // auto w3 = allocate_memory(w_size_chunked, 1);
 
-        auto w1 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
-        auto w2 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
-        auto w3 = allocate_memory(L_m_chunked * ELT_LIMBS, 1);
+        auto w1 = allocate_memory(B_m_chunked * ELT_BYTES, 1);
+        auto w2 = allocate_memory(B_m_chunked * ELT_BYTES, 1);
+        auto w3 = allocate_memory(L_m_chunked * ELT_BYTES, 1);
 
         printf("w1: %p\n", w1.get());
         printf("w2: %p\n", w2.get());
