@@ -347,8 +347,6 @@ void run_prover(
     printf("ELT_BYTES: %ld\n", ELT_BYTES);
     for (size_t i = 0; i < CHUNKS; i++) {
         if (i == CHUNKS - 1) {
-            // size_t w_size_chunked = w_size_chunked + ELT_BYTES;
-            // printf("last w_size_chunked %ld\n", w_size_chunked);
             B_m_chunked = m_chunked + 1;
             printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
             L_m_chunked = m_chunked - 1;
@@ -359,16 +357,20 @@ void run_prover(
         printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
 
         auto w1 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
-        auto w2 = allocate_memory(w_size_chunked, 1);
-        auto w3 = allocate_memory(w_size_chunked, 1);
+        auto w2 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
+        auto w3 = allocate_memory(L_m_chunked * ELT_LIMBS, 1);
 
         printf("w1: %p\n", w1.get());
         printf("w2: %p\n", w2.get());
         printf("w3: %p\n", w3.get());
 
-        auto B1_mults = allocate_memory(B1_mults_size_chunked, 1);
-        auto B2_mults = allocate_memory(B2_mults_size_chunked, 1);
-        auto L_mults = allocate_memory(L_mults_size_chunked, 1);
+        // auto B1_mults = allocate_memory(B1_mults_size_chunked, 1);
+        // auto B2_mults = allocate_memory(B2_mults_size_chunked, 1);
+        // auto L_mults = allocate_memory(L_mults_size_chunked, 1);
+
+        auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(B_m_chunked), 1);
+        auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(B_m_chunked), 1);
+        auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(L_m_chunked), 1);
 
         printf("B1_mults: %p\n", B1_mults.get());
         printf("B2_mults: %p\n", B2_mults.get());
@@ -388,7 +390,7 @@ void run_prover(
         printf("w_host + (i * B_m_chunked) * ELT_BYTES: %p\n", w_host + (i * B_m_chunked) * ELT_BYTES);
         printf("w_host + (i * B_m_chunked) * ELT_LIMBS: %p\n", w_host + (i * B_m_chunked) * ELT_LIMBS);
         printf("B_m_chunked * ELT_BYTES: %ld\n", B_m_chunked * ELT_BYTES);
-        gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + (i * B_m_chunked) * ELT_BYTES, B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB1) ); 
+        gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + ((i * B_m_chunked) * ELT_BYTES), B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB1) ); 
         ec_reduce_straus<ECp, C, R>(sB1, out_B1[i].get(), B1_mults.get(), w1.get(), B_m_chunked);
         printf("out of ec reduce B1, on host\n");
         printf("i * B1_mults_size_chunked: %ld\n", i * B1_mults_size_chunked);
@@ -401,7 +403,7 @@ void run_prover(
 
         gpuErrchk( cudaMemcpyAsync(B2_mults.get(), B2_mults_host + get_aff_total_bytes<ECpe>(i * B_m_chunked), get_aff_total_bytes<ECpe>(B_m_chunked), cudaMemcpyHostToDevice, sB2) );
         // gpuErrchk( cudaMemcpyAsync(w2.get(), w_host2 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB2) ); 
-        gpuErrchk( cudaMemcpyAsync(w2.get(), w_host2 + (i * B_m_chunked) * ELT_BYTES, B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB2) ); 
+        gpuErrchk( cudaMemcpyAsync(w2.get(), w_host2 + ((i * B_m_chunked) * ELT_BYTES), B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB2) ); 
         ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2[i].get(), B2_mults.get(), w2.get(), B_m_chunked);
         printf("out of ec reduce B2, on host\n");
         gpuErrchk( cudaMemcpyAsync(host_B2[i], out_B2[i].get(), out_size, cudaMemcpyDeviceToHost, sB2) );
@@ -412,7 +414,7 @@ void run_prover(
         // gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sL) ); 
         printf("w_host3: %p\n", w_host3);
         printf("w_host3 + (2+(i * L_m_chunked)) * ELT_BYTES: %p\n", w_host3 + (2+(i * L_m_chunked)) * ELT_BYTES);
-        gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + (2+(i * L_m_chunked)) * ELT_BYTES, L_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sL) ); 
+        gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + ((2+(i * L_m_chunked)) * ELT_BYTES), L_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sL) ); 
         // NOTE: it is only + (2 * ELT_LIMBS) as w3 is a var * that jumps by 64 bits. 12 * 64 = 768 bit element
         printf("w3.get(): %p\n", w3.get());
         printf("w3.get() + (primary_input_size + 1) * ELT_LIMBS: %p\n", w3.get() + (primary_input_size + 1) * ELT_LIMBS);
