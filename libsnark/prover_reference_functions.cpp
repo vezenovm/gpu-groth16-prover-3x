@@ -265,6 +265,11 @@ mnt4753_libsnark::G1 *mnt4753_libsnark::G1_add(mnt4753_libsnark::G1 *a,
   return new mnt4753_libsnark::G1{.data = a->data + b->data};
 }
 
+mnt4753_libsnark::G2 *mnt4753_libsnark::G2_add(mnt4753_libsnark::G2 *a,
+                                               mnt4753_libsnark::G2 *b) {
+  return new mnt4753_libsnark::G2{.data = a->data + b->data};
+}
+
 mnt4753_libsnark::G1 *mnt4753_libsnark::G1_scale(field *a, G1 *b) {
   return new G1{.data = a->data * b->data};
 }
@@ -584,6 +589,11 @@ int mnt6753_libsnark::G2_equal(mnt6753_libsnark::G2 *a, mnt6753_libsnark::G2 *b)
 mnt6753_libsnark::G1 *mnt6753_libsnark::G1_add(mnt6753_libsnark::G1 *a,
                                                mnt6753_libsnark::G1 *b) {
   return new mnt6753_libsnark::G1{.data = a->data + b->data};
+}
+
+mnt6753_libsnark::G2 *mnt6753_libsnark::G2_add(mnt6753_libsnark::G2 *a,
+                                               mnt6753_libsnark::G2 *b) {
+  return new mnt6753_libsnark::G2{.data = a->data + b->data};
 }
 
 mnt6753_libsnark::G1 *mnt6753_libsnark::G1_scale(field *a, G1 *b) {

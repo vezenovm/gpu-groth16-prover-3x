@@ -261,11 +261,25 @@ void run_prover(
     var_ptr out_B1[CHUNKS];
     var_ptr out_B2[CHUNKS];
     var_ptr out_L[CHUNKS];
+
+    var *host_B1[CHUNKS];
+    var *host_B2[CHUNKS];
+    var *host_L[CHUNKS];
+
     printf("about to allocate out ptrs\n");
     for (size_t i = 0; i < CHUNKS; i++) {
         out_B1[i] = allocate_memory(out_size, 1);
         out_B2[i] = allocate_memory(out_size, 1);
         out_L[i] = allocate_memory(out_size, 1);
+
+        cudaMallocHost((void **)&host_B1[i], out_size);
+        printf("host_B1: %p\n", host_B1[i]);
+
+        cudaMallocHost((void **)&host_B2[i], out_size);
+        printf("host_B2: %p\n", host_B2[i]);
+
+        cudaMallocHost((void **)&host_L[i], out_size);
+        printf("host_L: %p\n", host_L[i]);
     }
     printf("finished allocating out ptrs\n");
 
@@ -281,18 +295,18 @@ void run_prover(
     // printf("L_mults_host: %p\n", L_mults_host);
     // printf("out_L: %p\n", out_L.get());
     
-    var *host_B1 = nullptr;
-    cudaMallocHost((void **)&host_B1, out_size);
-    printf("host_B1: %p\n", host_B1);
-    // printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + 1 * out_size_chunked); 
+    // var *host_B1 = nullptr;
+    // cudaMallocHost((void **)&host_B1, out_size);
+    // printf("host_B1: %p\n", host_B1);
+    // // printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + 1 * out_size_chunked); 
 
-    var *host_B2 = nullptr;
-    cudaMallocHost((void **)&host_B2, out_size);
-    printf("host_B2: %p\n", host_B2);
+    // var *host_B2 = nullptr;
+    // cudaMallocHost((void **)&host_B2, out_size);
+    // printf("host_B2: %p\n", host_B2);
 
-    var *host_L = nullptr;
-    cudaMallocHost((void **)&host_L, out_size);
-    printf("host_L: %p\n", host_L);
+    // var *host_L = nullptr;
+    // cudaMallocHost((void **)&host_L, out_size);
+    // printf("host_L: %p\n", host_L);
     // printf("about to allocate A\n");
     // ec_reduce_straus<ECp, C, R>(sA, out_A.get(), A_mults.get(), w, m + 1);
     // var *host_A = (var *) malloc (out_size);
@@ -374,49 +388,47 @@ void run_prover(
         gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB1) ); 
         ec_reduce_straus<ECp, C, R>(sB1, out_B1[i].get(), B1_mults.get(), w1.get(), B_m_chunked);
         printf("out of ec reduce B1, on host\n");
-        printf("i * out_chunked: %ld\n", i * out_size_chunked);
-        printf("out_size_scaled: %ld\n", out_size_scaled);
-        printf("host_B1 + out_size_scaled: %p\n", host_B1 + out_size_scaled);
-        printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + i * out_size_chunked);
+        // printf("i * out_chunked: %ld\n", i * out_size_chunked);
+        // printf("out_size_scaled: %ld\n", out_size_scaled);
+        // printf("host_B1 + out_size_scaled: %p\n", host_B1 + out_size_scaled);
+        // printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + i * out_size_chunked);
         // printf("out_B1.get() + i * out_size_chunked: %p\n", out_B1[0][i].get() + i * out_size_chunked); 
-        printf("out_B1.get(): %p\n", out_B1[i].get()); 
-        // gpuErrchk( cudaMemcpyAsync(host_B1 + out_size_scaled, out_B1.get() + out_size_scaled, out_size_chunked, cudaMemcpyDeviceToHost, sB1) );
+        printf("out_B1[%d].get(): %p\n", i, out_B1[i].get()); 
+        gpuErrchk( cudaMemcpyAsync(host_B1[i], out_B1[i].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
         printf("initiated B1 copy to host\n");
 
         gpuErrchk( cudaMemcpyAsync(B2_mults.get(), B2_mults_host + i * B2_mults_size_chunked, B2_mults_size_chunked, cudaMemcpyHostToDevice, sB2) );
         gpuErrchk( cudaMemcpyAsync(w2.get(), w_host2 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sB2) ); 
         ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2[i].get(), B2_mults.get(), w2.get(), B_m_chunked);
         printf("out of ec reduce B2, on host\n");
-        // gpuErrchk( cudaMemcpyAsync(host_B2 + out_size_scaled, out_B2.get() + out_size_scaled, out_size_chunked, cudaMemcpyDeviceToHost, sB2) );
+        gpuErrchk( cudaMemcpyAsync(host_B2[i], out_B2[i]get(), out_size, cudaMemcpyDeviceToHost, sB2) );
         printf("initiated B2 copy to host\n");
 
         gpuErrchk( cudaMemcpyAsync(L_mults.get(), L_mults_host + i * L_mults_size_chunked, L_mults_size_chunked, cudaMemcpyHostToDevice, sL) );
         gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sL) ); 
         ec_reduce_straus<ECp, C, R>(sL, out_L[i].get(), L_mults.get(), w3.get() + (primary_input_size + 1) * ELT_LIMBS, L_m_chunked);
         printf("out of ec reduce L, on host\n");
-        // gpuErrchk( cudaMemcpyAsync(host_L + out_size_scaled, out_L.get() + out_size_scaled, out_size_chunked, cudaMemcpyDeviceToHost, sL) );
+        gpuErrchk( cudaMemcpyAsync(host_L[i], out_L[i].get(), out_size, cudaMemcpyDeviceToHost, sL) );
         printf("initiated L copy to host\n");
     }
-    printf("host_B1: %" PRIu64 "\n", *host_B1);
-    printf("host_B2: %" PRIu64 "\n", *host_B2);
-    printf("host_L: %" PRIu64 "\n", *host_L);
+    printf("host_B1: %" PRIu64 "\n", *host_B1[0]);
+    printf("host_B2: %" PRIu64 "\n", *host_B2[0]);
+    printf("host_L: %" PRIu64 "\n", *host_L[0]);
 
-    static constexpr size_t threads_per_block = 256;
-    for (size_t i = 0; i < CHUNKS; i++) {
-        size_t out_size_scaled = (i * out_size) / 8;
+    // static constexpr size_t threads_per_block = 256;
+    // for (size_t i = 0; i < CHUNKS; i++) {
+    //     size_t out_size_scaled = (i * out_size) / 8;
 
-        size_t nblocks = (out_size * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
+    //     size_t nblocks = (out_size * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
 
-        // ec_reduce_no_multiexp<ECp, C, R>(sB1, out_B1.get(), m+1);
-        // ec_reduce_no_multiexp<ECpe, C, 2*R>(sB2, out_B2.get(), m+1);
-        // ec_reduce_no_multiexp<ECp, C, R>(sL, out_L.get(), m-1);
-        ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sB1>>>(out_B1[0].get(), out_B1[i].get(), out_size);
-        ec_sum_all<ECpe><<<nblocks, threads_per_block, 0, sB2>>>(out_B2[0].get(), out_B2[i].get(), out_size);
-        ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sL>>>(out_L[0].get(), out_L[i].get(), out_size);
+    //     // ec_reduce_no_multiexp<ECp, C, R>(sB1, out_B1.get(), m+1);
+    //     // ec_reduce_no_multiexp<ECpe, C, 2*R>(sB2, out_B2.get(), m+1);
+    //     // ec_reduce_no_multiexp<ECp, C, R>(sL, out_L.get(), m-1);
+    //     ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sB1>>>(out_B1[0].get(), out_B1[i].get(), out_size);
+    //     ec_sum_all<ECpe><<<nblocks, threads_per_block, 0, sB2>>>(out_B2[0].get(), out_B2[i].get(), out_size);
+    //     ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sL>>>(out_L[0].get(), out_L[i].get(), out_size);
 
-    }
-
-
+    // }
 
     // TODO: this is wrong, we never memcpy between host_B* result and out_B* result
     // for (size_t i = 0; i < CHUNKS; i++) {
@@ -431,10 +443,11 @@ void run_prover(
     //     nblocks = (n * BIG_WIDTH + threads_per_block - 1) / threads_per_block;
     //     ec_sum_all<ECp><<<nblocks, threads_per_block, 0, sL>>>(out_L.get(), out_L.get() + i * out_size_chunked, out_size_chunked);
     // }
+    // gpuErrchk( cudaMemcpyAsync(host_B1, out_B1[0].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
+    // gpuErrchk( cudaMemcpyAsync(host_B2, out_B2[0].get(), out_size, cudaMemcpyDeviceToHost, sB2) );
+    // gpuErrchk( cudaMemcpyAsync(host_L, out_L[0].get(), out_size, cudaMemcpyDeviceToHost, sL) );
 
-    gpuErrchk( cudaMemcpyAsync(host_B1, out_B1[0].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
-    gpuErrchk( cudaMemcpyAsync(host_B2, out_B2[0].get(), out_size, cudaMemcpyDeviceToHost, sB2) );
-    gpuErrchk( cudaMemcpyAsync(host_L, out_L[0].get(), out_size, cudaMemcpyDeviceToHost, sL) );
+
     // printf("about to allocate w 1\n");
     // auto w1 = allocate_memory(w_size, 1);
     // auto w2 = allocate_memory(w_size, 1);
@@ -473,8 +486,6 @@ void run_prover(
     // ec_reduce_straus<ECp, C, R>(sB1, out_B1.get(), B1_mults.get(), w1.get(), m + 1);
     // printf("out of ec reduce B1, on host\n");
 
-
-
     print_time(t, "gpu launch");
 
     G1 *evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
@@ -495,18 +506,39 @@ void run_prover(
 
     cudaStreamSynchronize(sB1);
     printf("synchronized sB1\n");
-    printf("host_B1: %" PRIu64 "\n", *(host_B1));
-    G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
+    printf("host_B1: %" PRIu64 "\n", *(host_B1[0]));
+    // G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
+    G1 *B1_evaluations[CHUNKS];
+    for (size_t i = 0; i < CHUNKS; i++) {
+        B1_evaluations[i] = B::read_pt_ECp(host_B1);
+    }
 
     cudaStreamSynchronize(sB2);
     printf("synchronized sB2\n");
-    printf("host_B2: %" PRIu64 "\n", *(host_B2));
-    G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
+    printf("host_B2: %" PRIu64 "\n", *(host_B2[0]));
+    // G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
+    G2 *B2_evaluations[CHUNKS];
+    for (size_t i = 0; i < CHUNKS; i++) {
+        B2_evaluations[i] = B::read_pt_ECpe(host_B2);
+    }
 
     cudaStreamSynchronize(sL);
     printf("synchronized sL\n");
-    printf("host_L: %" PRIu64 "\n", *(host_L));
-    G1 *evaluation_Lt = B::read_pt_ECp(host_L);
+    printf("host_L: %" PRIu64 "\n", *(host_L[0]));
+    // G1 *evaluation_Lt = B::read_pt_ECp(host_L);
+    G1 *L_evaluations[CHUNKS];
+    for (size_t i = 0; i < CHUNKS; i++) {
+        L_evaluations[i] = B::read_pt_ECp(host_L);
+    }
+    
+    G1 *evaluation_Bt1 = B1_evaluations[0];
+    G2 *evaluation_Bt2 = B2_evaluations[0];
+    G1 *evaluation_L = L_evaluations[0];
+    for (size_t i = 1; i < CHUNKS; i++) {
+        evaluation_Bt1 = B::G1_add(evaluation_Bt1, B1_evaluations[i]);
+        evaluation_Bt2 = B::G2_add(evaluation_Bt2, B2_evaluations[i]);
+        evaluation_L = B::G1_add(evaluation_Lt, L_evaluations[i]);
+    }
 
     print_time(t_gpu, "gpu e2e");
 
