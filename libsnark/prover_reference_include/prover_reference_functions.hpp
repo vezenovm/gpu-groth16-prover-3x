@@ -39,6 +39,7 @@ public:
   static int G1_equal(G1 *a, G1 *b);
   static int G2_equal(G2 *a, G2 *b);
   static G1 *G1_add(G1 *a, G1 *b);
+  static G2 *G2_add(G2 *a, G2 *b);
   static G1 *G1_scale(field *a, G1 *b);
 
   static void vector_Fr_muleq(vector_Fr *a, vector_Fr *b, size_t size);
@@ -126,6 +127,7 @@ public:
   static int G1_equal(G1 *a, G1 *b);
   static int G2_equal(G2 *a, G2 *b);
   static G1 *G1_add(G1 *a, G1 *b);
+  static G2 *G2_add(G2 *a, G2 *b);
   static G1 *G1_scale(field *a, G1 *b);
 
   static void vector_Fr_muleq(vector_Fr *a, vector_Fr *b, size_t size);
