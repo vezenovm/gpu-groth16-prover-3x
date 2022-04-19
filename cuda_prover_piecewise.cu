@@ -377,6 +377,8 @@ void run_prover(
         // static constexpr int AFF_POINT_LIMBS = 2 * EC::field_type::DEGREE * ELT_LIMBS;
 
         // gpuErrchk( cudaMemcpyAsync(B1_mults.get(), B1_mults_host + i * B1_mults_size_chunked, B1_mults_size_chunked, cudaMemcpyHostToDevice, sB1) );
+
+        // TODO: try it with get_aff_total_bytes
         gpuErrchk( cudaMemcpyAsync(B1_mults.get(), B1_mults_host + (i * B_m_chunked * 2) * ELT_BYTES, 2 * B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB1) );
         printf("w_host + i * w_size_chunked: %p\n", w_host + i * w_size_chunked);
         gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + (i * B_m_chunked) * ELT_BYTES, B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB1) ); 
