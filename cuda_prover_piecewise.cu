@@ -343,7 +343,8 @@ void run_prover(
     size_t B_m_chunked = m_chunked;
     size_t L_m_chunked = m_chunked;
 
-
+    // TODO: do the same thing with the offsets as the chunks amounts so that we don't have to encapsulate all the CUDA calls in big IF statements
+    // size_t w_offset_B_m = 
     printf("ELT_BYTES: %ld\n", ELT_BYTES);
     for (size_t i = 0; i < CHUNKS; i++) {
         if (i == CHUNKS - 1) {
@@ -403,8 +404,8 @@ void run_prover(
             
             printf("i * (B_m_chunked - 1) * ELT_BYTES: %p\n", (i * (B_m_chunked - 1) * ELT_BYTES));
             printf("w_host + (i * (B_m_chunked - 1) * ELT_BYTES): %p\n", w_host + (i * (B_m_chunked - 1) * ELT_BYTES));
-            gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + (i * (B_m_chunked - 1) * ELT_BYTES), B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB1) ); 
-            gpuErrchk( cudaMemcpyAsync(w2.get(), w_host2 + (i * (B_m_chunked - 1) * ELT_BYTES), B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB2) ); 
+            gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + (i * (B_m_chunked - 1) * ELT_BYTES), (B_m_chunked - 1) * ELT_BYTES, cudaMemcpyHostToDevice, sB1) ); 
+            gpuErrchk( cudaMemcpyAsync((void *)w2.get(), w_host2 + (i * (B_m_chunked - 1) * ELT_BYTES), (B_m_chunked - 1) * ELT_BYTES, cudaMemcpyHostToDevice, sB2) ); 
         } else {
             gpuErrchk( cudaMemcpyAsync(B1_mults.get(), B1_mults_host + get_aff_total_bytes<ECp>(i * B_m_chunked), get_aff_total_bytes<ECp>(B_m_chunked), cudaMemcpyHostToDevice, sB1) );
             gpuErrchk( cudaMemcpyAsync(B2_mults.get(), B2_mults_host + get_aff_total_bytes<ECpe>(i * B_m_chunked), get_aff_total_bytes<ECpe>(B_m_chunked), cudaMemcpyHostToDevice, sB2) );
