@@ -157,8 +157,9 @@ get_aff_total_bytes(size_t n)
 
     static constexpr size_t coord_bytes = FF::DEGREE * ELT_BYTES;
     static constexpr size_t aff_pt_bytes = 2 * coord_bytes;
-
-    return (n * aff_pt_bytes);
+    size_t total_aff_bytes = n * aff_pt_bytes;
+    printf("total affine bytes for %ld points: %zu\n", n, total_aff_bytes);
+    return total_aff_bytes;
 }
 
 template <typename B>
@@ -365,25 +366,25 @@ void run_prover(
         printf("B_m_chunked: (m + 1) / CHUNKS: %ld\n", B_m_chunked);
         printf("L_m_chunked: (m - 1) / CHUNKS: %ld\n", L_m_chunked);
 
-        auto w1 = allocate_memory(w_size_chunked, 1);
-        auto w2 = allocate_memory(w_size_chunked, 1);
-        auto w3 = allocate_memory(w_size_chunked, 1);
+        // auto w1 = allocate_memory(w_size_chunked, 1);
+        // auto w2 = allocate_memory(w_size_chunked, 1);
+        // auto w3 = allocate_memory(w_size_chunked, 1);
 
-        // auto w1 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
-        // auto w2 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
-        // auto w3 = allocate_memory(L_m_chunked * ELT_LIMBS, 1);
+        auto w1 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
+        auto w2 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
+        auto w3 = allocate_memory(L_m_chunked * ELT_LIMBS, 1);
 
         printf("w1: %p\n", w1.get());
         printf("w2: %p\n", w2.get());
         printf("w3: %p\n", w3.get());
 
-        // auto B1_mults = allocate_memory(B1_mults_size_chunked, 1);
-        // auto B2_mults = allocate_memory(B2_mults_size_chunked, 1);
-        // auto L_mults = allocate_memory(L_mults_size_chunked, 1);
+        auto B1_mults = allocate_memory(B1_mults_size_chunked, 1);
+        auto B2_mults = allocate_memory(B2_mults_size_chunked, 1);
+        auto L_mults = allocate_memory(L_mults_size_chunked, 1);
 
-        auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(B_m_chunked), 1);
-        auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(B_m_chunked), 1);
-        auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(L_m_chunked), 1);
+        // auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(B_m_chunked), 1);
+        // auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(B_m_chunked), 1);
+        // auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(L_m_chunked), 1);
 
         printf("B1_mults: %p\n", B1_mults.get());
         printf("B2_mults: %p\n", B2_mults.get());
