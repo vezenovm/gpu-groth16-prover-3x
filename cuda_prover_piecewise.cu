@@ -510,7 +510,7 @@ void run_prover(
     // G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
     G1 *B1_evaluations[CHUNKS];
     for (size_t i = 0; i < CHUNKS; i++) {
-        B1_evaluations[i] = B::read_pt_ECp(host_B1);
+        B1_evaluations[i] = B::read_pt_ECp(host_B1[i]);
     }
 
     cudaStreamSynchronize(sB2);
@@ -519,7 +519,7 @@ void run_prover(
     // G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
     G2 *B2_evaluations[CHUNKS];
     for (size_t i = 0; i < CHUNKS; i++) {
-        B2_evaluations[i] = B::read_pt_ECpe(host_B2);
+        B2_evaluations[i] = B::read_pt_ECpe(host_B2[i]);
     }
 
     cudaStreamSynchronize(sL);
@@ -528,7 +528,7 @@ void run_prover(
     // G1 *evaluation_Lt = B::read_pt_ECp(host_L);
     G1 *L_evaluations[CHUNKS];
     for (size_t i = 0; i < CHUNKS; i++) {
-        L_evaluations[i] = B::read_pt_ECp(host_L);
+        L_evaluations[i] = B::read_pt_ECp(host_L[i]);
     }
     
     G1 *evaluation_Bt1 = B1_evaluations[0];
