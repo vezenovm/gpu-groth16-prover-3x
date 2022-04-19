@@ -343,15 +343,23 @@ void run_prover(
     size_t B_m_chunked = m_chunked;
     size_t L_m_chunked = m_chunked;
 
+    auto x = w_host;
+    size_t testi = 0;
+    while x != nullptr {
+        w_host = w_host + testi;
+        testi++;
+    }
+    printf("testi: %ld\n", testi);
+
     // TODO: do the same thing with the offsets as the chunks amounts so that we don't have to encapsulate all the CUDA calls in big IF statements
     // size_t w_offset_B_m = 
     printf("ELT_BYTES: %ld\n", ELT_BYTES);
     for (size_t i = 0; i < CHUNKS; i++) {
         if (i == CHUNKS - 1) {
             B_m_chunked = m_chunked + 1;
-            printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
+            // printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
             L_m_chunked = m_chunked - 1;
-            printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
+            // printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
         }
         printf("last w_size_chunked %ld\n", w_size_chunked);
         printf("B_m_chunked: (m + 1) / CHUNKS: %ld\n", B_m_chunked);
