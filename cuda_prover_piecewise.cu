@@ -394,7 +394,7 @@ void run_prover(
         // printf("w_host + (i * B_m_chunked - 1) * ELT_BYTES: %p\n", w_host + (i * B_m_chunked - 1) * ELT_BYTES);
         printf("B_m_chunked * ELT_BYTES: %ld\n", B_m_chunked * ELT_BYTES);
         if (i == CHUNKS - 1) {
-            printf("w_host + (i * B_m_chunked - 1) * ELT_BYTES: %p\n", w_host + (i * (B_m_chunked) * ELT_BYTES) - ELT_BYTES);
+            printf("w_host + (i * B_m_chunked - 1) * ELT_BYTES: %p\n", w_host + (i * (B_m_chunked - 1) * ELT_BYTES) - ELT_BYTES);
             gpuErrchk( cudaMemcpyAsync(w1.get(), w_host + (i * (B_m_chunked - 1) * ELT_BYTES) - ELT_BYTES, B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB1) ); 
             gpuErrchk( cudaMemcpyAsync(w2.get(), w_host2 + (i * (B_m_chunked - 1) * ELT_BYTES) - ELT_BYTES, B_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sB2) ); 
         } else {
