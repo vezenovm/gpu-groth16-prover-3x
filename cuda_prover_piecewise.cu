@@ -325,7 +325,7 @@ void run_prover(
             printf("j and j_bound: %ld, %ld\n", j, j_bound);
             printf("(chunk * j): %ld\n", chunk * j );
             printf("k_bound/B_m_chunks[chunk]: %ld\n", k_bound);
-            printf("(curr_row_offset + j): %ld, %ld\n", (curr_row_offset + j) );
+            printf("(curr_row_offset + j): %ld, %ld\n", (curr_row_offset + j) * ELT_BTYES );
             for (size_t k = 0; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
                 // printf("j and k: %ld, %ld\n", j, k);
                 // printf("B1_mults_host_chunked + (chunk * j) + k : %p\n", B1_mults_host_chunked + (chunk * j) + k );
@@ -335,8 +335,8 @@ void run_prover(
                 // printf("(chunk * j): %ld\n", chunk * j );
                 // printf("(curr_row_offset + j): %ld\n", (curr_row_offset + j) );
 
-                void *res = B1_mults_host_chunked + (chunk * j) + k;
-                res = ((char *) B1_mults_host) + (curr_row_offset + j);
+                void *res = B1_mults_host_chunked + ((chunk * j) + k) * ELT_BYTES;
+                res = ((char *) B1_mults_host) + ((curr_row_offset + j) * ELT_BYTES);
                 // B1_mults_host_chunked + (chunk * j) + k = B1_mults_host + (curr_row_offset + j);
             }
         }
@@ -433,7 +433,7 @@ void run_prover(
             //     sB1) );
             gpuErrchk( 
                 cudaMemcpyAsync(B1_mults.get(), 
-                B1_mults_host_chunked + get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)), 
+                B1_mults_host_chunked[i], 
                 get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunked), 
                 cudaMemcpyHostToDevice, 
                 sB1) );
