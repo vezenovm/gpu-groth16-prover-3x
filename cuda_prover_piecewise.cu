@@ -304,7 +304,7 @@ void run_prover(
         }
 
         printf("(chunk * B_m_chunks[chunk]): %ld\n", (chunk * B_m_chunks[chunk]));
-        cudaMallocHost(B1_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
+        cudaMallocHost((void *)B1_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
 
         size_t B1_len = m+1;
         size_t B2_len = m+1;
