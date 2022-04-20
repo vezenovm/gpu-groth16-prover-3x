@@ -331,8 +331,8 @@ void run_prover(
                 printf("B1_mults_host_chunked + (chunk * j) + k : %p\n", B1_mults_host_chunked + (chunk * j) + k );
                 printf("B1_mults_host + (curr_row_offset + j): %p\n", B1_mults_host + (curr_row_offset + j) );
 
-                (B1_mults_host_chunked + (chunk * j) + k) = ((char *) B1_mults_host) + (curr_row_offset + j);
-                // *(B1_mults_host_chunked + (chunk * j) + k) = B1_mults_host + (curr_row_offset + j);
+                // (B1_mults_host_chunked + (chunk * j) + k) = ((char *) B1_mults_host) + (curr_row_offset + j);
+                *(B1_mults_host_chunked + (chunk * j) + k) = B1_mults_host + (curr_row_offset + j);
             }
         }
         printf("done chunking multiples arrays\n");
