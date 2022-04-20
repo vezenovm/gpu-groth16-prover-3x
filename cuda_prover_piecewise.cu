@@ -310,7 +310,7 @@ void run_prover(
         size_t B2_len = m+1;
         size_t L_len = m-1;
         printf("about to organize chunked multiples arrays\n");
-        for (size_t i = 1; i < (1U << C) - 1; ++i) {
+        for (size_t i = 0; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*B1_len;
             size_t curr_row_offset = i*B1_len;
             size_t j;
@@ -327,7 +327,8 @@ void run_prover(
             printf("k_bound/B_m_chunks[chunk]: %ld\n", k_bound);
             printf("(curr_row_offset + j): %ld, %ld\n", (curr_row_offset + j) );
             for (size_t k = 0; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
-                *(B1_mults_host_chunked + (chunk * j) + k) = ((char *) B1_mults_host) + (prev_row_offset + j);
+                printf("j and k: %ld, %ld\n", j, k);
+                *(B1_mults_host_chunked + (chunk * j) + k) = ((char *) B1_mults_host) + (curr_row_offset + j);
                 // *(B1_mults_host_chunked + (chunk * j) + k) = B1_mults_host + (curr_row_offset + j);
             }
         }
