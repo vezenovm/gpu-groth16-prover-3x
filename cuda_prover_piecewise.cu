@@ -530,7 +530,7 @@ void run_prover(
     G1 *evaluation_Lt = L_evaluations[0];
     for (size_t i = 1; i < CHUNKS; i++) {
         evaluation_Bt1 = B::G1_add(evaluation_Bt1, B1_evaluations[i]);
-        // B::print_G1(evaluation_Bt1);
+        B::print_G1(evaluation_Bt1);
         evaluation_Bt2 = B::G2_add(evaluation_Bt2, B2_evaluations[i]);
         // B::print_G2(evaluation_Bt2);
         evaluation_Lt = B::G1_add(evaluation_Lt, L_evaluations[i]);
