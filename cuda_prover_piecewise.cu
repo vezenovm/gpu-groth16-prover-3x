@@ -325,7 +325,7 @@ void run_prover(
             size_t j_bound = j + B_m_chunks[chunk];
             size_t k_bound = B_m_chunks[chunk];
             for (size_t k = 0; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
-                *(B1_mults_host_chunked[chunk] + k) = B1_mults_host + (curr_row_offset + j);
+                *(B1_mults_host_chunked + (chunk * j) + k) = B1_mults_host + (curr_row_offset + j);
             }
         }
 
