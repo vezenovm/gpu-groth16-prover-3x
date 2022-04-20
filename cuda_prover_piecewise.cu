@@ -323,7 +323,7 @@ void run_prover(
             size_t j_bound = j + B_m_chunks[chunk];
             size_t k_bound = B_m_chunks[chunk];
             printf("j and j_bound: %ld, %ld\n", j, j_bound);
-            printf("(chunk * j): %ld\n", chunk * 1 );
+            printf("(chunk * j): %ld\n", chunk * j );
             printf("k_bound/B_m_chunks[chunk]: %ld\n", k_bound);
             printf("(curr_row_offset + j): %ld, %ld\n", (curr_row_offset + j) );
             for (size_t k = 0; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
