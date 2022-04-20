@@ -273,6 +273,14 @@ void run_prover(
     void *B1_mults_host_chunked[CHUNKS];
     void *B2_mults_host_chunked[CHUNKS];
     void *L_mults_host_chunked[CHUNKS];
+    // originally how memory is laid out for multiples
+    // If vec = [P0, ..., Pn], then multiples holds an array
+    //
+    // [    P0, ...,     Pn,
+    //     2P0, ...,    2Pn,
+    //     3P0, ...,    3Pn,
+    //          ...,
+    //  2^(C-1) P0, ..., 2^(C-1) Pn]
     // for (size_t i = 1; i < (1U << C) - 1; ++i) {
     //     size_t prev_row_offset = (i-1)*len;
     //     size_t curr_row_offset = i*len;
@@ -298,19 +306,22 @@ void run_prover(
         B_m_chunks[chunk] = m_chunked;
         L_m_chunks[chunk] = m_chunked;
 
-        size_t B1_len, B2_len, L_len = m+1, m+1, m-1;
+        size_t B1_len = m+1;
+        size_t B2_len = m+1;
+        size_t L_len = m+1;
         for (size_t i = 1; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*B1_len;
             size_t curr_row_offset = i*B1_len;
             size_t j;
             if (chunk == CHUNKS - 1)  {
-                j = chunk * (B_m_chunks[CHUNKED] - 1);
+                j = chunk * (B_m_chunks[chunk] - 1);
             } else {
-                j = chunk * B_m_chunks[CHUNKED];
+                j = chunk * B_m_chunks[chunk];
             }
             // size_t chunked_row_offset = j;
-            size_t bound = j + B_m_chunks[CHUNKED];
-            for (size_t k = 0 ; k < B_m_chunks[CHUNKED], j < bound; ++k, ++j) {
+            size_t j_bound = j + B_m_chunks[chunk];
+            size_t k_bound = B_m_chunks[chunk]
+            for (size_t k = 0 ; k < B_m_chunks[chunk], j < j_bound; ++k, ++j) {
                 B1_mults_host_chunked[chunk][k] = B1_mults_host[curr_row_offset + j];
             }
         }
