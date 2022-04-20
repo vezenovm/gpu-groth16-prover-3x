@@ -298,7 +298,7 @@ void run_prover(
         B_m_chunks[chunk] = m_chunked;
         L_m_chunks[chunk] = m_chunked;
 
-        size_t B1_len, B2_len, L_len = m+1, m+1, m-1
+        size_t B1_len, B2_len, L_len = m+1, m+1, m-1;
         for (size_t i = 1; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*B1_len;
             size_t curr_row_offset = i*B1_len;
