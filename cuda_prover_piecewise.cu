@@ -303,7 +303,7 @@ void run_prover(
             L_m_chunks[chunk] = m_chunked;
         }
 
-        cudaMallocHost((void **)&(B1_mults_host_chunked + (chunk * B_m_chunks[chunk])), get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
+        cudaMallocHost((void **)(B1_mults_host_chunked + (chunk * B_m_chunks[chunk])), get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
 
         size_t B1_len = m+1;
         size_t B2_len = m+1;
@@ -322,7 +322,8 @@ void run_prover(
             size_t j_bound = j + B_m_chunks[chunk];
             size_t k_bound = B_m_chunks[chunk];
             printf("j and j_bound: %ld, %ld\n", j, j_bound);
-            printf("(chunk * j) + k: %ld, %ld\n", (chunk * j) + k);
+            printf("(chunk * j) + k: %ld, %ld\n", (chunk * j) );
+            printf("k_bound/B_m_chunks[chunk]: %ld\n", k_bound);
             printf("(curr_row_offset + j): %ld, %ld\n", (curr_row_offset + j) );
             for (size_t k = 0; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
                 *(B1_mults_host_chunked + (chunk * j) + k) = ((char *) B1_mults_host) + (curr_row_offset + j);
