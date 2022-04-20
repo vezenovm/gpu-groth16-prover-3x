@@ -327,7 +327,7 @@ void run_prover(
             printf("k_bound/B_m_chunks[chunk]: %ld\n", k_bound);
             printf("(curr_row_offset + j): %ld, %ld\n", (curr_row_offset + j) );
             for (size_t k = 0; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
-                *(B1_mults_host_chunked + (chunk * j) + k) = ((char *) B1_mults_host) + (curr_row_offset + j);
+                *(B1_mults_host_chunked + (chunk * j) + k) = ((char *) B1_mults_host) + (prev_row_offset + j);
                 // *(B1_mults_host_chunked + (chunk * j) + k) = B1_mults_host + (curr_row_offset + j);
             }
         }
