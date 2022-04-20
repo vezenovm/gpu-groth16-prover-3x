@@ -288,15 +288,15 @@ void run_prover(
     int B_m_chunks[CHUNKS];
     int L_m_chunks[CHUNKS];
     printf("about to allocate out ptrs\n");
-    for (size_t i = 0; i < CHUNKS; i++) {
+    for (size_t chunk = 0; i < CHUNKS; i++) {
         if (chunk == CHUNKS - 1) {
-            B_m_chunks[CHUNKS] = m_chunked + 1;
+            B_m_chunks[chunk] = m_chunked + 1;
             // printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
-            L_m_chunks[CHUNKS] = m_chunked - 1;
+            L_m_chunks[chunk] = m_chunked - 1;
             // printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
         }
-        B_m_chunks[CHUNKS] = m_chunked;
-        L_m_chunks[CHUNKS] = L_chunked;
+        B_m_chunks[chunk] = m_chunked;
+        L_m_chunks[chunk] = L_chunked;
 
         size_t B1_len, B2_len, L_len = m+1, m+1, m-1
         for (size_t i = 1; i < (1U << C) - 1; ++i) {
@@ -315,17 +315,17 @@ void run_prover(
             }
         }
 
-        out_B1[i] = allocate_memory(out_size, 1);
-        out_B2[i] = allocate_memory(out_size, 1);
-        out_L[i] = allocate_memory(out_size, 1);
+        out_B1[chunk] = allocate_memory(out_size, 1);
+        out_B2[chunk] = allocate_memory(out_size, 1);
+        out_L[chunk] = allocate_memory(out_size, 1);
 
-        cudaMallocHost((void **)&host_B1[i], out_size);
+        cudaMallocHost((void **)&host_B1[chunk], out_size);
         // printf("host_B1: %p\n", host_B1[i]);
 
-        cudaMallocHost((void **)&host_B2[i], out_size);
+        cudaMallocHost((void **)&host_B2[chunk], out_size);
         // printf("host_B2: %p\n", host_B2[i]);
 
-        cudaMallocHost((void **)&host_L[i], out_size);
+        cudaMallocHost((void **)&host_L[chunk], out_size);
         // printf("host_L: %p\n", host_L[i]);
     }
     printf("finished allocating out ptrs\n");
