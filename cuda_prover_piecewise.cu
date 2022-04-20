@@ -328,8 +328,8 @@ void run_prover(
             printf("(curr_row_offset + j): %ld, %ld\n", (curr_row_offset + j) );
             for (size_t k = 0; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
                 printf("j and k: %ld, %ld\n", j, k);
-                printf("(curr_row_offset + j): %ld, %ld\n", B1_mults_host_chunked + (chunk * j) + k );
-                printf("(curr_row_offset + j): %ld, %ld\n", B1_mults_host + (curr_row_offset + j) );
+                printf("B1_mults_host_chunked + (chunk * j) + k : %p\n", B1_mults_host_chunked + (chunk * j) + k );
+                printf("B1_mults_host + (curr_row_offset + j): %p\n", B1_mults_host + (curr_row_offset + j) );
 
                 *(B1_mults_host_chunked + (chunk * j) + k) = *((char *) B1_mults_host) + (curr_row_offset + j);
                 // *(B1_mults_host_chunked + (chunk * j) + k) = B1_mults_host + (curr_row_offset + j);
