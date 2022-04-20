@@ -266,9 +266,9 @@ void run_prover(
     var *host_B2[CHUNKS];
     var *host_L[CHUNKS];
 
-    void *B1_mults_host_chunked[CHUNKS];
-    void *B2_mults_host_chunked[CHUNKS];
-    void *L_mults_host_chunked[CHUNKS];
+    var *B1_mults_host_chunked[CHUNKS];
+    var *B2_mults_host_chunked[CHUNKS];
+    var *L_mults_host_chunked[CHUNKS];
     // originally how memory is laid out for multiples
     // If vec = [P0, ..., Pn], then multiples holds an array
     //
@@ -304,7 +304,7 @@ void run_prover(
         }
 
         printf("(chunk * B_m_chunks[chunk]): %ld\n", (chunk * B_m_chunks[chunk]));
-        cudaMallocHost((void *)B1_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
+        cudaMallocHost((void **)&B1_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
 
         size_t B1_len = m+1;
         size_t B2_len = m+1;
