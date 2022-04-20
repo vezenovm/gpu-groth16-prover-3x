@@ -405,7 +405,7 @@ void run_prover(
         printf("i * (B_m_chunked) * ELT_BYTES: %p\n", (i * (B_m_chunked) * ELT_BYTES));
         printf("w_host + i * (B_m_chunked) * ELT_BYTES: %p\n", w_host + (i * (B_m_chunked) * ELT_BYTES));
         printf("B_m_chunked * ELT_BYTES: %ld\n", B_m_chunked * ELT_BYTES);
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
         if (i == CHUNKS - 1) {
             gpuErrchk( 
                 cudaMemcpyAsync(B1_mults.get(), 
