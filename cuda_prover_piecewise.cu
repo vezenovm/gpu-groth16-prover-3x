@@ -433,7 +433,7 @@ void run_prover(
             //     sB1) );
             gpuErrchk( 
                 cudaMemcpyAsync(B1_mults.get(), 
-                B1_mults_host_chunked[i], 
+                (void **)&B1_mults_host_chunked[i], 
                 get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunked), 
                 cudaMemcpyHostToDevice, 
                 sB1) );
@@ -468,7 +468,7 @@ void run_prover(
             //     sB1) );
             gpuErrchk( 
                 cudaMemcpyAsync(B1_mults.get(), 
-                B1_mults_host_chunked[i], 
+                (void **)&B1_mults_host_chunked[i], 
                 get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunked), 
                 cudaMemcpyHostToDevice, 
                 sB1) );
