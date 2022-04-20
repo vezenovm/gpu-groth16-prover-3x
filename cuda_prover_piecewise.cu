@@ -307,11 +307,12 @@ void run_prover(
             L_m_chunks[chunk] = m_chunked;
         }
 
-        cudaMallocHost((void **)&B1_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
+        cudaMallocHost((void **)&B1_mults_host_chunked + (chunk * B_m_chunks[chunk]), get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
 
         size_t B1_len = m+1;
         size_t B2_len = m+1;
         size_t L_len = m-1;
+        printf("about to organize chunked multiples arrays\n");
         for (size_t i = 1; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*B1_len;
             size_t curr_row_offset = i*B1_len;
@@ -328,6 +329,7 @@ void run_prover(
                 *(B1_mults_host_chunked + (chunk * j) + k) = B1_mults_host + (curr_row_offset + j);
             }
         }
+        printf("done chunking multiples arrays\n");
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         out_B2[chunk] = allocate_memory(out_size, 1);
