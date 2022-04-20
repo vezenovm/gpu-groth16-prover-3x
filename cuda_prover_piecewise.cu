@@ -125,7 +125,7 @@ load_scalars_async_host(size_t n, FILE *inputs)
 }
 
 template< typename EC >
-void *
+var *
 load_points_affine_host(size_t n, FILE *inputs)
 {
     typedef typename EC::field_type FF;
@@ -138,7 +138,7 @@ load_points_affine_host(size_t n, FILE *inputs)
     // auto mem = allocate_memory(total_aff_bytes, 1);
 
     // void *aff_bytes_buffer = (void *) malloc (total_aff_bytes);
-    void *aff_bytes_buffer;
+    var *aff_bytes_buffer;
     cudaMallocHost((void **)&aff_bytes_buffer, total_aff_bytes);
     if (fread(aff_bytes_buffer, total_aff_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read all curve poinst\n");
@@ -246,20 +246,16 @@ void run_prover(
 
     printf("about to allocate B1\n");
 
-    void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    var *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
     // printf("B1_mults_host: %p\n", B1_mults_host);
 
     printf("about to allocate B2\n");
-    void *B2_mults_host = load_points_affine_host<ECpe>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    var *B2_mults_host = load_points_affine_host<ECpe>(((1U << C) - 1)*(m + 1), preprocessed_file);
 
     printf("about to allocate L\n");
-    void *L_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
+    var *L_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
 
     fclose(preprocessed_file);
-
-    size_t out_size_chunked = out_size * CHUNKS;
-    // size_t out_size_chunked = out_size / CHUNKS;
-    printf("out_size * CHUNKS: %ld\n", out_size_chunked);
 
     // Each of the CHUNK'd arrays is an output of a multiexponentation 
     var_ptr out_B1[CHUNKS];
@@ -297,39 +293,39 @@ void run_prover(
     int L_m_chunks[CHUNKS];
     printf("about to allocate out ptrs\n");
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
-        if (chunk == CHUNKS - 1) {
-            B_m_chunks[chunk] = m_chunked + 1;
-            // printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
-            L_m_chunks[chunk] = m_chunked - 1;
-            // printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
-        } else {
-            B_m_chunks[chunk] = m_chunked;
-            L_m_chunks[chunk] = m_chunked;
-        }
+        // if (chunk == CHUNKS - 1) {
+        //     B_m_chunks[chunk] = m_chunked + 1;
+        //     // printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
+        //     L_m_chunks[chunk] = m_chunked - 1;
+        //     // printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
+        // } else {
+        //     B_m_chunks[chunk] = m_chunked;
+        //     L_m_chunks[chunk] = m_chunked;
+        // }
 
-        cudaMallocHost((void **)&B1_mults_host_chunked + (chunk * B_m_chunks[chunk]), get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
+        // cudaMallocHost((void **)&B1_mults_host_chunked + (chunk * B_m_chunks[chunk]), get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
 
-        size_t B1_len = m+1;
-        size_t B2_len = m+1;
-        size_t L_len = m-1;
-        printf("about to organize chunked multiples arrays\n");
-        for (size_t i = 1; i < (1U << C) - 1; ++i) {
-            size_t prev_row_offset = (i-1)*B1_len;
-            size_t curr_row_offset = i*B1_len;
-            size_t j;
-            if (chunk == CHUNKS - 1)  {
-                j = chunk * (B_m_chunks[chunk] - 1);
-            } else {
-                j = chunk * B_m_chunks[chunk];
-            }
-            // size_t chunked_row_offset = j;
-            size_t j_bound = j + B_m_chunks[chunk];
-            size_t k_bound = B_m_chunks[chunk];
-            for (size_t k = 0; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
-                *(B1_mults_host_chunked + (chunk * j) + k) = B1_mults_host + (curr_row_offset + j);
-            }
-        }
-        printf("done chunking multiples arrays\n");
+        // size_t B1_len = m+1;
+        // size_t B2_len = m+1;
+        // size_t L_len = m-1;
+        // printf("about to organize chunked multiples arrays\n");
+        // for (size_t i = 1; i < (1U << C) - 1; ++i) {
+        //     size_t prev_row_offset = (i-1)*B1_len;
+        //     size_t curr_row_offset = i*B1_len;
+        //     size_t j;
+        //     if (chunk == CHUNKS - 1)  {
+        //         j = chunk * (B_m_chunks[chunk] - 1);
+        //     } else {
+        //         j = chunk * B_m_chunks[chunk];
+        //     }
+        //     // size_t chunked_row_offset = j;
+        //     size_t j_bound = j + B_m_chunks[chunk];
+        //     size_t k_bound = B_m_chunks[chunk];
+        //     for (size_t k = 0; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
+        //         *(B1_mults_host_chunked + (chunk * j) + k) = B1_mults_host + (curr_row_offset + j);
+        //     }
+        // }
+        // printf("done chunking multiples arrays\n");
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         out_B2[chunk] = allocate_memory(out_size, 1);
@@ -345,32 +341,7 @@ void run_prover(
         // printf("host_L: %p\n", host_L[i]);
     }
     printf("finished allocating out ptrs\n");
-
-    // auto out_B1 = allocate_memory(out_size_chunked, 1);
-    // printf("out_size: %ld\n", out_size);
-    // printf("out_B1: %p\n", out_B1.get());
-
-    // auto out_B2 = allocate_memory(out_size_chunked, 1);
-    // printf("B2_mults_host: %p\n", B2_mults_host);
-    // printf("out_B2: %p\n", out_B2.get());
-
-    // auto out_L = allocate_memory(out_size_chunked, 1);
-    // printf("L_mults_host: %p\n", L_mults_host);
-    // printf("out_L: %p\n", out_L.get());
     
-    // var *host_B1 = nullptr;
-    // cudaMallocHost((void **)&host_B1, out_size);
-    // printf("host_B1: %p\n", host_B1);
-    // // printf("host_B1 + i * out_size_chunked: %p\n", host_B1 + 1 * out_size_chunked); 
-
-    // var *host_B2 = nullptr;
-    // cudaMallocHost((void **)&host_B2, out_size);
-    // printf("host_B2: %p\n", host_B2);
-
-    // var *host_L = nullptr;
-    // cudaMallocHost((void **)&host_L, out_size);
-    // printf("host_L: %p\n", host_L);
-
     // printf("about to allocate A\n");
     // ec_reduce_straus<ECp, C, R>(sA, out_A.get(), A_mults.get(), w, m + 1);
     // var *host_A = (var *) malloc (out_size);
