@@ -296,7 +296,7 @@ void run_prover(
     int B_m_chunks[CHUNKS];
     int L_m_chunks[CHUNKS];
     printf("about to allocate out ptrs\n");
-    for (size_t chunk = 0; i < CHUNKS; chunk++) {
+    for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
         if (chunk == CHUNKS - 1) {
             B_m_chunks[chunk] = m_chunked + 1;
             // printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
@@ -321,7 +321,7 @@ void run_prover(
             // size_t chunked_row_offset = j;
             size_t j_bound = j + B_m_chunks[chunk];
             size_t k_bound = B_m_chunks[chunk]
-            for (size_t k = 0 ; k < B_m_chunks[chunk], j < j_bound; ++k, ++j) {
+            for (size_t k = 0 ; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
                 B1_mults_host_chunked[chunk][k] = B1_mults_host[curr_row_offset + j];
             }
         }
