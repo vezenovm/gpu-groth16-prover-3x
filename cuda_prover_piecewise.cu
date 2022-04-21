@@ -447,7 +447,7 @@ void run_prover(
         printf("i * (B_m_chunked) * ELT_BYTES: %p\n", (i * (B_m_chunked) * ELT_BYTES));
         printf("w_host + i * (B_m_chunked) * ELT_BYTES: %p\n", w_host + (i * (B_m_chunked) * ELT_BYTES));
         printf("B_m_chunked * ELT_BYTES: %ld\n", B_m_chunked * ELT_BYTES);
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
 
         if (i == CHUNKS - 1) {
             printf("get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)): %p\n", get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)) );
@@ -607,7 +607,10 @@ void run_prover(
     G2 *evaluation_Bt2 = B2_evaluations[0];
     G1 *evaluation_Lt = L_evaluations[0];
     for (size_t i = 1; i < CHUNKS; i++) {
+        printf("before addition:\n");
+        B::print_G1(evaluation_Bt1_sum);
         evaluation_Bt1_sum = B::G1_add(evaluation_Bt1_sum, B1_evaluations[i]);
+        printf("after addition:\n");
         B::print_G1(evaluation_Bt1_sum);
         evaluation_Bt2 = B::G2_add(evaluation_Bt2, B2_evaluations[i]);
         // B::print_G2(evaluation_Bt2);
@@ -622,8 +625,6 @@ void run_prover(
     auto Lt1_plus_scaled_Bt1 = B::G1_add(evaluation_Lt, scaled_Bt1);
     auto final_C = B::G1_add(evaluation_Ht, Lt1_plus_scaled_Bt1);
     
-    B::print_G1(evaluation_Bt1);
-
     print_time(t, "cpu 2");
 
     B::print_G1(evaluation_Bt1);
