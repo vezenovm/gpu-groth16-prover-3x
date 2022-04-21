@@ -343,7 +343,7 @@ void run_prover(
 
                 // res = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
                 printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k): %ld\n",  get_aff_total_bytes<ECp>(curr_row_offset + j + k));
-                void *source = ((char *) B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
+                void *source = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
                 std::memcpy(res, source, G1_size);
                 printf("completed memcpy: %ld\n",  1);
 
