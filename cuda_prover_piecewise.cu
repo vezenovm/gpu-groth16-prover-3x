@@ -319,14 +319,14 @@ void run_prover(
         for (size_t i = 0; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*B1_len;
             size_t curr_row_offset = i*B1_len;
-            size_t j = chunk * B_m_chunks[chunk];
-            // if (chunk == CHUNKS - 1)  {
-            //     j = chunk * (B_m_chunks[chunk] - 1);
-            //     chunked_row_offset = (B_m_chunks[chunk] - 1) * i;
-            // } else {
-            //     j = chunk * B_m_chunks[chunk];
-            //     chunked_row_offset = B_m_chunks[chunk] * i;
-            // }
+            // size_t j = chunk * B_m_chunks[chunk];
+            size_t j;
+            if (chunk == CHUNKS - 1)  {
+                j = chunk * (B_m_chunks[chunk] - 1);
+            } else {
+                j = chunk * B_m_chunks[chunk];
+            }
+            size_t chunked_row_offset = B_m_chunks[chunk] * i;
             size_t j_bound = j + B_m_chunks[chunk];
             size_t k_bound = B_m_chunks[chunk];
             printf("j and j_bound: %ld, %ld\n", j, j_bound);
@@ -344,8 +344,8 @@ void run_prover(
                 void *source = ((char *)B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
                 // printf("source: %p\n",  source);
 
-                // std::memcpy(res, source, G1_size);
-                cudaMemcpy(res, source, G1_size, cudaMemcpyHostToHost);
+                std::memcpy(res, source, G1_size);
+                // cudaMemcpy(res, source, G1_size, cudaMemcpyHostToHost);
                 // printf("completed memcpy: %ld\n",  1);
 
                 // printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k)): %ld\n",  get_aff_total_bytes<ECp>(curr_row_offset + j + k));
