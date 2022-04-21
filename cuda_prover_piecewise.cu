@@ -267,8 +267,8 @@ void run_prover(
     var *host_B2[CHUNKS];
     var *host_L[CHUNKS];
 
-    std::unique_ptr<var> B1_mults_host_chunked[CHUNKS];
-    // void *B1_mults_host_chunked[CHUNKS];
+    // std::unique_ptr<var> B1_mults_host_chunked[CHUNKS];
+    void *B1_mults_host_chunked[CHUNKS];
     void *B2_mults_host_chunked[CHUNKS];
     void *L_mults_host_chunked[CHUNKS];
     // originally how memory is laid out for multiples
@@ -344,8 +344,8 @@ void run_prover(
             // char *c_mults_chunked = reinterpret_cast<char *>(res);
             // const char *c_mults = reinterpret_cast<const char *>(source);
 
-            std::memcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]));
-            // gpuErrchk( cudaMemcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]), cudaMemcpyHostToHost) );
+            // std::memcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]));
+            gpuErrchk( cudaMemcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]), cudaMemcpyHostToHost) );
 
             // NOTE: Loop formerly used, can be switched to just a single memcpy operation
             // for (size_t k = 0; k < B_m_chunks[chunk]; ++k) {
