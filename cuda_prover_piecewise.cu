@@ -336,7 +336,7 @@ void run_prover(
             printf("NEW LOOP *********************************************** NEW LOOP\nget_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n",  aff_bytes_offset_j);
             for (size_t k = 0; k < B_m_chunks[chunk]; ++k) {
                 // printf("((chunk * j) + k) * ELT_BYTES: %ld\n", ((chunk * j) + k) * ELT_BYTES );
-                void *res = ((char *)B1_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i - 1) + k);
+                void *res = ((char *)B1_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k);
                 // printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i + k): %ld\n",  get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k));
 
                 // res = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
@@ -344,8 +344,8 @@ void run_prover(
                 void *source = ((char *)B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
                 // printf("source: %p\n",  source);
 
-                std::memcpy(res, source, G1_size);
-                // cudaMemcpy(res, source, G1_size, cudaMemcpyHostToHost);
+                // std::memcpy(res, source, G1_size);
+                cudaMemcpy(res, source, G1_size, cudaMemcpyHostToHost);
                 // printf("completed memcpy: %ld\n",  1);
 
                 // printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k)): %ld\n",  get_aff_total_bytes<ECp>(curr_row_offset + j + k));
@@ -410,9 +410,9 @@ void run_prover(
         printf("B_m_chunked: (m + 1) / CHUNKS: %ld\n", B_m_chunked);
         printf("L_m_chunked: (m - 1) / CHUNKS: %ld\n", L_m_chunked);
 
-        auto w1 = allocate_memory(B_m_chunked * ELT_BYTES, 1);
-        auto w2 = allocate_memory(B_m_chunked * ELT_BYTES, 1);
-        auto w3 = allocate_memory(L_m_chunked * ELT_BYTES, 1);
+        auto w1 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
+        auto w2 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
+        auto w3 = allocate_memory(L_m_chunked * ELT_LIMBS, 1);
 
         printf("w1 and w2 size: %ld\n", B_m_chunked * ELT_BYTES);
         printf("w3 size: %ld\n", L_m_chunked * ELT_BYTES);
