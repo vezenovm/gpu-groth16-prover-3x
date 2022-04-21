@@ -266,9 +266,9 @@ void run_prover(
     var *host_B2[CHUNKS];
     var *host_L[CHUNKS];
 
-    var *B1_mults_host_chunked[CHUNKS];
-    var *B2_mults_host_chunked[CHUNKS];
-    var *L_mults_host_chunked[CHUNKS];
+    void *B1_mults_host_chunked[CHUNKS];
+    void *B2_mults_host_chunked[CHUNKS];
+    void *L_mults_host_chunked[CHUNKS];
     // originally how memory is laid out for multiples
     // If vec = [P0, ..., Pn], then multiples holds an array
     //
