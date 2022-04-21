@@ -568,7 +568,7 @@ void run_prover(
     }
 
     auto binary_op = [](G1 *p1, G1 *p2){return B::G1_add(p1, p2); };
-    G1 *final_B1_host = std::accumulate(B1_evaluations.begin(), B1_evaluations.end(), B1_evaluations[0], binary_op);
+    G1 *final_B1_host = std::accumulate(B1_evaluations.begin() + 1, B1_evaluations.end(), B1_evaluations[0], binary_op);
     printf("final_B1_host:\n");
     B::print_G1(final_B1_host);
 
