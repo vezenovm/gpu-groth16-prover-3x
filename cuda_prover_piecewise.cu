@@ -293,14 +293,19 @@ void run_prover(
     int L_m_chunks[CHUNKS];
     printf("about to allocate out ptrs\n");
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
+        // size_t j = chunk * B_m_chunks[chunk];
+        size_t j; 
         if (chunk == CHUNKS - 1) {
             B_m_chunks[chunk] = m_chunked + 1;
             // printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
             L_m_chunks[chunk] = m_chunked - 1;
             // printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
+            j = chunk * (B_m_chunks[chunk] - 1);
         } else {
             B_m_chunks[chunk] = m_chunked;
             L_m_chunks[chunk] = m_chunked;
+
+            j = chunk * B_m_chunks[chunk];
         }
 
         printf("B_m_chunks[chunk]: %ld\n", B_m_chunks[chunk]);
@@ -319,19 +324,11 @@ void run_prover(
         for (size_t i = 0; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*B1_len;
             size_t curr_row_offset = i*B1_len;
-            // size_t j = chunk * B_m_chunks[chunk];
-            size_t j;
-            if (chunk == CHUNKS - 1)  {
-                j = chunk * (B_m_chunks[chunk] - 1);
-            } else {
-                j = chunk * B_m_chunks[chunk];
-            }
             size_t chunked_row_offset = B_m_chunks[chunk] * i;
             size_t j_bound = j + B_m_chunks[chunk];
-            size_t k_bound = B_m_chunks[chunk];
             printf("j and j_bound: %ld, %ld\n", j, j_bound);
             // printf("(chunk * j): %ld\n", chunk * j );
-            // printf("k_bound aka B_m_chunks[chunk]: %ld\n", k_bound);
+            // printf("B_m_chunks[chunk]: %ld\n", B_m_chunks[chunk]);
             size_t aff_bytes_offset_j = get_aff_total_bytes<ECp>(curr_row_offset + j);
             printf("NEW LOOP *********************************************** NEW LOOP\nget_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n",  aff_bytes_offset_j);
             for (size_t k = 0; k < B_m_chunks[chunk]; ++k) {
@@ -345,7 +342,7 @@ void run_prover(
                 // printf("source: %p\n",  source);
 
                 // std::memcpy(res, source, G1_size);
-                cudaMemcpy(res, source, G1_size, cudaMemcpyHostToHost);
+                gpuErrchk( cudaMemcpy(res, source, G1_size, cudaMemcpyHostToHost) );
                 // printf("completed memcpy: %ld\n",  1);
 
                 // printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k)): %ld\n",  get_aff_total_bytes<ECp>(curr_row_offset + j + k));
