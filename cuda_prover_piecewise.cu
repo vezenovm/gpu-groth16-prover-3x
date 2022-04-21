@@ -310,6 +310,10 @@ void run_prover(
         size_t B2_len = m+1;
         size_t L_len = m-1;
         printf("about to organize chunked multiples arrays\n");
+        size_t G1_size = get_aff_total_bytes<ECp>(1);
+        printf("G1_size: %ld\n", G1_size);
+        size_t G2_size = get_aff_total_bytes<ECpe>(1);
+        printf("G2_size: %ld\n", G2_size);
         for (size_t i = 0; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*B1_len;
             size_t curr_row_offset = i*B1_len;
@@ -336,13 +340,15 @@ void run_prover(
                 void *res = B1_mults_host_chunked[i] + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k);
                 printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i + k): %ld\n",  get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k));
 
-                res = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
-                // res = ((char *) B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k));
+                // res = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
+                void *source = ((char *) B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k));
+                std::memcpy(res, source, get_aff_total_bytes<ECp>(2));
 
                 // printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k)): %ld\n",  get_aff_total_bytes<ECp>(curr_row_offset + j + k));
 
                 // void *res2 = B1_mults_host_chunked + ((chunk * j) + k)
             }
+            printf("get_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n",  aff_bytes_offset_j);
         }
         printf("done chunking multiples arrays\n");
 
