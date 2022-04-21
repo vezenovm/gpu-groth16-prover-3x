@@ -336,12 +336,12 @@ void run_prover(
             printf("NEW LOOP *********************************************** NEW LOOP\nget_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n",  aff_bytes_offset_j);
             for (size_t k = 0; k < B_m_chunks[chunk]; ++k) {
                 // printf("((chunk * j) + k) * ELT_BYTES: %ld\n", ((chunk * j) + k) * ELT_BYTES );
-                void *res = ((char *)B1_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k) / 8;
+                void *res = (B1_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k) / 8;
                 // printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i + k): %ld\n",  get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k));
 
                 // res = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
                 // printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k): %ld\n",  get_aff_total_bytes<ECp>(curr_row_offset + j + k));
-                void *source = ((char *)B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k - 1);
+                void *source = ((char *)B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
                 // printf("source: %p\n",  source);
 
                 // std::memcpy(res, source, G1_size);
