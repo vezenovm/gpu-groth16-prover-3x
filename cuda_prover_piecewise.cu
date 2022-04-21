@@ -1,5 +1,6 @@
 #include <string>
 #include <chrono>
+#include <memory>
 #include <inttypes.h>
 
 #define NDEBUG 1
@@ -266,7 +267,8 @@ void run_prover(
     var *host_B2[CHUNKS];
     var *host_L[CHUNKS];
 
-    void *B1_mults_host_chunked[CHUNKS];
+    std::unique_ptr<var> B1_mults_host_chunked[CHUNKS];
+    // void *B1_mults_host_chunked[CHUNKS];
     void *B2_mults_host_chunked[CHUNKS];
     void *L_mults_host_chunked[CHUNKS];
     // originally how memory is laid out for multiples
@@ -447,7 +449,7 @@ void run_prover(
         printf("i * (B_m_chunked) * ELT_BYTES: %p\n", (i * (B_m_chunked) * ELT_BYTES));
         printf("w_host + i * (B_m_chunked) * ELT_BYTES: %p\n", w_host + (i * (B_m_chunked) * ELT_BYTES));
         printf("B_m_chunked * ELT_BYTES: %ld\n", B_m_chunked * ELT_BYTES);
-        cudaDeviceSynchronize();
+        // cudaDeviceSynchronize();
 
         if (i == CHUNKS - 1) {
             printf("get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)): %p\n", get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)) );
@@ -529,30 +531,27 @@ void run_prover(
         printf("out of ec reduce B1, on host\n");
         printf("i * B1_mults_size_chunked: %ld\n", i * B1_mults_size_chunked);
         // printf("out_size_scaled: %ld\n", out_size_scaled);
-        // printf("host_B1 + out_size_scaled: %p\n", host_B1 + out_size_scaled);
-        // printf("out_B1.get() + i * out_size_chunked: %p\n", out_B1[0][i].get() + i * out_size_chunked); 
-        printf("out_B1[%d].get(): %p\n", i, out_B1[i].get()); 
-        gpuErrchk( cudaMemcpyAsync(host_B1[i], out_B1[i].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
-        printf("initiated B1 copy to host\n");
 
         // gpuErrchk( cudaMemcpyAsync(B2_mults.get(), B2_mults_host + get_aff_total_bytes<ECpe>(i * B_m_chunked), get_aff_total_bytes<ECpe>(B_m_chunked), cudaMemcpyHostToDevice, sB2) );
         ec_reduce_straus<ECpe, C, 2*R>(sB2, out_B2[i].get(), B2_mults.get(), w2.get(), B_m_chunked);
         printf("out of ec reduce B2, on host\n");
-        gpuErrchk( cudaMemcpyAsync(host_B2[i], out_B2[i].get(), out_size, cudaMemcpyDeviceToHost, sB2) );
-        printf("initiated B2 copy to host\n");
 
         // gpuErrchk( cudaMemcpyAsync(L_mults.get(), L_mults_host + (i * L_m_chunked * 2) * ELT_BYTES, 2 * L_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sL) );
-        // gpuErrchk( cudaMemcpyAsync(L_mults.get(), L_mults_host + get_aff_total_bytes<ECpe>(((1U << C) - 1)*i * L_m_chunked), get_aff_total_bytes<ECpe>(((1U << C) - 1)*L_m_chunked), cudaMemcpyHostToDevice, sL) );
-        // gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + i * w_size_chunked, w_size_chunked, cudaMemcpyHostToDevice, sL) ); 
         printf("w_host3: %p\n", w_host3);
         printf("w_host3 + (2+(i * L_m_chunked)) * ELT_BYTES: %p\n", w_host3 + (2+(i * L_m_chunked)) * ELT_BYTES);
-        // gpuErrchk( cudaMemcpyAsync(w3.get(), w_host3 + ((2+(i * L_m_chunked)) * ELT_BYTES), L_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sL) ); 
         // NOTE: it is only + (2 * ELT_LIMBS) as w3 is a var * that jumps by 64 bits. 12 * 64 = 768 bit element
         printf("w3.get(): %p\n", w3.get());
         printf("w3.get() + (primary_input_size + 1) * ELT_LIMBS: %p\n", w3.get() + (primary_input_size + 1) * ELT_LIMBS);
         ec_reduce_straus<ECp, C, R>(sL, out_L[i].get(), L_mults.get(), w3.get(), L_m_chunked);
-        // ec_reduce_straus<ECp, C, R>(sL, out_L[i].get(), L_mults.get(), w3.get() + (primary_input_size + 1) * ELT_LIMBS, L_m_chunked);
         printf("out of ec reduce L, on host\n");
+
+        printf("i: %ld, out_B1[%d].get(): %p\n", i, out_B1[i].get()); 
+        gpuErrchk( cudaMemcpyAsync(host_B1[i], out_B1[i].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
+        printf("initiated B1 copy to host\n");
+
+        gpuErrchk( cudaMemcpyAsync(host_B2[i], out_B2[i].get(), out_size, cudaMemcpyDeviceToHost, sB2) );
+        printf("initiated B2 copy to host\n");
+
         gpuErrchk( cudaMemcpyAsync(host_L[i], out_L[i].get(), out_size, cudaMemcpyDeviceToHost, sL) );
         printf("initiated L copy to host\n");
     }
