@@ -336,8 +336,8 @@ void run_prover(
 
             // void *res = c_mults_chunked + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
             // void *source = c_mults + get_aff_total_bytes<ECp>(curr_row_offset + j);
-            void *res = B1_mults_host_chunked[chunk] + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k);
-            void *source = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
+            void *res = B1_mults_host_chunked[chunk] + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
+            void *source = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j);
 
             const char *c_mults_chunked = reinterpret_cast<const char *>(res);
             const char *c_mults = reinterpret_cast<const char *>(source);
