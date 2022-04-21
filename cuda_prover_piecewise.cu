@@ -342,8 +342,10 @@ void run_prover(
                 printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i + k): %ld\n",  get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k));
 
                 // res = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
-                printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k): %p\n",  B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k));
+                printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k): %ld\n",  get_aff_total_bytes<ECp>(curr_row_offset + j + k));
                 void *source = ((char *)B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
+                printf("source: %p\n",  source);
+
                 std::memcpy(res, source, G1_size);
                 printf("completed memcpy: %ld\n",  1);
 
