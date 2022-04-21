@@ -266,9 +266,9 @@ void run_prover(
     var *host_B2[CHUNKS];
     var *host_L[CHUNKS];
 
-    void *B1_mults_host_chunked[CHUNKS];
-    void *B2_mults_host_chunked[CHUNKS];
-    void *L_mults_host_chunked[CHUNKS];
+    var *B1_mults_host_chunked[CHUNKS];
+    var *B2_mults_host_chunked[CHUNKS];
+    var *L_mults_host_chunked[CHUNKS];
     // originally how memory is laid out for multiples
     // If vec = [P0, ..., Pn], then multiples holds an array
     //
@@ -336,7 +336,7 @@ void run_prover(
             printf("NEW LOOP *********************************************** NEW LOOP\nget_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n",  aff_bytes_offset_j);
             for (size_t k = 0; k < B_m_chunks[chunk]; ++k) {
                 // printf("((chunk * j) + k) * ELT_BYTES: %ld\n", ((chunk * j) + k) * ELT_BYTES );
-                void *res = ((char *)B1_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k);
+                void *res = ((char *)B1_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k) / 8;
                 // printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i + k): %ld\n",  get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k));
 
                 // res = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
