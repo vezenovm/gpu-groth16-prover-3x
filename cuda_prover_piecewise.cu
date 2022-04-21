@@ -314,6 +314,7 @@ void run_prover(
         printf("G1_size: %ld\n", G1_size);
         size_t G2_size = get_aff_total_bytes<ECpe>(1);
         printf("G2_size: %ld\n", G2_size);
+        printf("NEW INNER CHUNK LOOP *********************************************** NEW INNER CHUNK LOOP\n");
         for (size_t i = 0; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*B1_len;
             size_t curr_row_offset = i*B1_len;
@@ -331,7 +332,7 @@ void run_prover(
             // printf("k_bound aka B_m_chunks[chunk]: %ld\n", k_bound);
             size_t aff_bytes_offset_j = get_aff_total_bytes<ECp>(curr_row_offset + j);
             printf("NEW LOOP *********************************************** NEW LOOP\nget_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n",  aff_bytes_offset_j);
-            for (size_t k = 0; k < B_m_chunks[chunk] && j < j_bound; ++k, ++j) {
+            for (size_t k = 0; k < B_m_chunks[chunk]; ++k) {
                 // printf("j and k: %ld, %ld\n", j, k);
                 // printf("B1_mults_host_chunked + (chunk * j) + k : %p\n", B1_mults_host_chunked + (chunk * j) + k );
                 // printf("B1_mults_host + (curr_row_offset + j): %p\n", B1_mults_host + (curr_row_offset + j) );
