@@ -284,7 +284,7 @@ void run_prover(
     //     for (size_t j = 0; j < len; ++j)
     //        multiples[curr_row_offset + j] = vec[j] + multiples[prev_row_offset + j];
     // }
-    printf("B1_mults_host + 3940992: %ld\n", *(B1_mults_host + 3941184));
+    printf("B1_mults_host + 3940992: %ld\n", *(((char *)B1_mults_host) + 3941184));
     size_t m_chunked = m / CHUNKS;
     printf("m / CHUNKS: %ld\n", m_chunked);
     size_t B_m_chunked = m_chunked;
@@ -343,7 +343,7 @@ void run_prover(
 
                 // res = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
                 printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k): %p\n",  B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k));
-                void *source = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
+                void *source = ((char *)B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
                 std::memcpy(res, source, G1_size);
                 printf("completed memcpy: %ld\n",  1);
 
