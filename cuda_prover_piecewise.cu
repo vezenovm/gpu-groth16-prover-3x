@@ -333,13 +333,13 @@ void run_prover(
                 // printf("B1_mults_host + (curr_row_offset + j): %p\n", B1_mults_host + (curr_row_offset + j) );
             
                 // printf("((chunk * j) + k) * ELT_BYTES: %ld\n", ((chunk * j) + k) * ELT_BYTES );
-                void *res = B1_mults_host_chunked[i] + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k));
-                printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * j) + get_aff<ECp>(k)): %ld\n",  get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + get_aff_total_bytes<ECp>(k));
+                void *res = B1_mults_host_chunked[i] + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k);
+                printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * j) + get_aff<ECp>(k)): %ld\n",  get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i) + get_aff_total_bytes<ECp>(k));
 
                 res = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
                 // res = ((char *) B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k));
 
-                printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k)): %ld\n",  get_aff_total_bytes<ECp>(curr_row_offset + j + k)));
+                printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k)): %ld\n",  get_aff_total_bytes<ECp>(curr_row_offset + j + k));
 
                 // void *res2 = B1_mults_host_chunked + ((chunk * j) + k)
             }
