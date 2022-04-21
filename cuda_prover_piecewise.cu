@@ -341,7 +341,7 @@ void run_prover(
 
                 // res = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
                 // printf("get_aff_total_bytes<ECp>(curr_row_offset + j + k): %ld\n",  get_aff_total_bytes<ECp>(curr_row_offset + j + k));
-                void *source = ((char *)B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
+                void *source = ((char *)B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j + k - 1);
                 // printf("source: %p\n",  source);
 
                 // std::memcpy(res, source, G1_size);
@@ -410,9 +410,9 @@ void run_prover(
         printf("B_m_chunked: (m + 1) / CHUNKS: %ld\n", B_m_chunked);
         printf("L_m_chunked: (m - 1) / CHUNKS: %ld\n", L_m_chunked);
 
-        auto w1 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
-        auto w2 = allocate_memory(B_m_chunked * ELT_LIMBS, 1);
-        auto w3 = allocate_memory(L_m_chunked * ELT_LIMBS, 1);
+        auto w1 = allocate_memory(B_m_chunked * ELT_BYTES, 1);
+        auto w2 = allocate_memory(B_m_chunked * ELT_BYTES, 1);
+        auto w3 = allocate_memory(L_m_chunked * ELT_BYTES, 1);
 
         printf("w1 and w2 size: %ld\n", B_m_chunked * ELT_BYTES);
         printf("w3 size: %ld\n", L_m_chunked * ELT_BYTES);
