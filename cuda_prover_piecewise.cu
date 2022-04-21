@@ -342,7 +342,7 @@ void run_prover(
             // char *c_mults_chunked = reinterpret_cast<char *>(res);
             // const char *c_mults = reinterpret_cast<const char *>(source);
 
-            std::memcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk] + 10));
+            std::memcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk] + 1));
             // gpuErrchk( cudaMemcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]), cudaMemcpyHostToHost) );
 
             // NOTE: Loop formerly used, can be switched to just a single memcpy operation
