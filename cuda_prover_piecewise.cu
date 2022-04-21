@@ -603,23 +603,26 @@ void run_prover(
         L_evaluations[i] = B::read_pt_ECp(host_L[i]);
     }
     
-    G1 *evaluation_Bt1 = B1_evaluations[0];
+    G1 *evaluation_Bt1_sum = B1_evaluations[0];
     G2 *evaluation_Bt2 = B2_evaluations[0];
     G1 *evaluation_Lt = L_evaluations[0];
     for (size_t i = 1; i < CHUNKS; i++) {
-        evaluation_Bt1 = B::G1_add(evaluation_Bt1, B1_evaluations[i]);
-        B::print_G1(evaluation_Bt1);
+        evaluation_Bt1_sum = B::G1_add(evaluation_Bt1_sum, B1_evaluations[i]);
+        B::print_G1(evaluation_Bt1_sum);
         evaluation_Bt2 = B::G2_add(evaluation_Bt2, B2_evaluations[i]);
         // B::print_G2(evaluation_Bt2);
         evaluation_Lt = B::G1_add(evaluation_Lt, L_evaluations[i]);
         // B::print_G1(evaluation_Lt);
     }
+    G1 *evaluation_Bt1 = evaluation_Bt1_sum;
 
     print_time(t_gpu, "gpu e2e");
 
     auto scaled_Bt1 = B::G1_scale(B::input_r(inputs), evaluation_Bt1);
     auto Lt1_plus_scaled_Bt1 = B::G1_add(evaluation_Lt, scaled_Bt1);
     auto final_C = B::G1_add(evaluation_Ht, Lt1_plus_scaled_Bt1);
+    
+    B::print_G1(evaluation_Bt1);
 
     print_time(t, "cpu 2");
 
