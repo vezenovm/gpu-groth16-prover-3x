@@ -284,6 +284,7 @@ void run_prover(
     //     for (size_t j = 0; j < len; ++j)
     //        multiples[curr_row_offset + j] = vec[j] + multiples[prev_row_offset + j];
     // }
+    printf("B1_mults_host + 3940992: %p\n", B1_mults_host + 3940992);
     size_t m_chunked = m / CHUNKS;
     printf("m / CHUNKS: %ld\n", m_chunked);
     size_t B_m_chunked = m_chunked;
