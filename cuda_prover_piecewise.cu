@@ -286,7 +286,7 @@ void run_prover(
     int B_m_chunks[CHUNKS];
     int L_m_chunks[CHUNKS];
     printf("about to allocate out ptrs\n");
-    const char *c_mults = reinterpret_cast<const char *>(B1_mults_host);
+    // const char *c_mults = reinterpret_cast<const char *>(B1_mults_host);
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
         // size_t j = chunk * B_m_chunks[chunk];
         size_t j; 
@@ -317,7 +317,7 @@ void run_prover(
         size_t G2_size = get_aff_total_bytes<ECpe>(1);
         printf("G2_size: %ld\n", G2_size);
         
-        const char *c_mults_chunked = reinterpret_cast<const char *>(B1_mults_host_chunked[chunk]);
+        // const char *c_mults_chunked = reinterpret_cast<const char *>(B1_mults_host_chunked[chunk]);
 
         printf("NEW INNER CHUNK LOOP *********************************************** NEW INNER CHUNK LOOP\n");
         for (size_t i = 0; i < (1U << C) - 1; ++i) {
@@ -334,10 +334,16 @@ void run_prover(
             printf("get_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n", aff_bytes_offset_j);
             printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i): %ld\n", get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i)));
 
-            void *res = c_mults_chunked + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
-            void *source = c_mults + get_aff_total_bytes<ECp>(curr_row_offset + j);
-            // gpuErrchk( cudaMemcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]), cudaMemcpyHostToHost) );
+            // void *res = c_mults_chunked + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
+            // void *source = c_mults + get_aff_total_bytes<ECp>(curr_row_offset + j);
+            void *res = B1_mults_host_chunked[chunk] + get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i) + k);
+            void *source = B1_mults_host + get_aff_total_bytes<ECp>(curr_row_offset + j + k);
+
+            const char *c_mults_chunked = reinterpret_cast<const char *>(res);
+            const char *c_mults = reinterpret_cast<const char *>(source);
+
             std::memcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]));
+            // gpuErrchk( cudaMemcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]), cudaMemcpyHostToHost) );
 
             // NOTE: Loop formerly used, can be switched to just a single memcpy operation
             // for (size_t k = 0; k < B_m_chunks[chunk]; ++k) {
