@@ -320,9 +320,9 @@ void run_prover(
             size_t curr_row_offset = i*B1_len;
             size_t j;
             if (chunk == CHUNKS - 1)  {
-                j = chunk * (B_m_chunks[chunk] - 1) - 1;
+                j = chunk * (B_m_chunks[chunk] - 1);
             } else {
-                j = chunk * B_m_chunks[chunk] - 1;
+                j = chunk * B_m_chunks[chunk];
             }
             // size_t chunked_row_offset = j;
             size_t j_bound = j + B_m_chunks[chunk];
