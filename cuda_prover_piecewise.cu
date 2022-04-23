@@ -286,9 +286,9 @@ void run_prover(
         size_t chunk_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]);
         void *source = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
         // B1_mults_host_chunked[chunk] = source;
-        printf("chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
         gpuErrchk( cudaMallocHost((void **)&B1_mults_host_chunked[chunk], chunk_size) );
         std::memcpy(B1_mults_host_chunked[chunk], source, chunk_size);
+        printf("chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
         printf("chunk_offset: %ld, chunk_size: %p\n", chunk_offset, chunk_size);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
@@ -367,17 +367,13 @@ void run_prover(
 
         // TODO: check how we chunk through the multiples and witness, possibly have values overlapping when memcpy'ing causing errors
 
-        // TODO: try it with get_aff_total_bytes
-        printf("w_host: %p\n", w_host);
-        // printf("w_host + (i * B_m_chunked - 1) * ELT_BYTES: %p\n", w_host + (i * B_m_chunked - 1) * ELT_BYTES);
         printf("i * (B_m_chunked) * ELT_BYTES: %p\n", (i * (B_m_chunked) * ELT_BYTES));
         printf("w_host + i * (B_m_chunked) * ELT_BYTES: %p\n", w_host + (i * (B_m_chunked) * ELT_BYTES));
         printf("B_m_chunked * ELT_BYTES: %ld\n", B_m_chunked * ELT_BYTES);
         // cudaDeviceSynchronize();
-        cudaDeviceSynchronize();
 
         if (i == CHUNKS - 1) {
-            printf("get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)): %p\n", get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)) );
+            printf("get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]): %ld\n", gget_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]) );
             // gpuErrchk( 
             //     cudaMemcpyAsync(B1_mults.get(), 
             //     B1_mults_host + get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)), 
