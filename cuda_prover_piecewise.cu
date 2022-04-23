@@ -579,18 +579,21 @@ void run_prover(
     cudaStreamDestroy(sB2);
     cudaStreamDestroy(sL);
 
-    // for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
-        // cudaFreeHost(B1_mults_host_chunked[chunk]);
-    // }
-    cudaFreeHost(B1_mults_host_chunked);
+    for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
+        cudaFreeHost(B1_mults_host_chunked[chunk]);
+        cudaFreeHost(host_B1[chunk]);
+        cudaFreeHost(host_B2[chunk]);
+        cudaFreeHost(host_L[chunk]);
+    }
+    // cudaFreeHost(B1_mults_host_chunked);
     cudaFreeHost(B2_mults_host);
     cudaFreeHost(L_mults_host);
     cudaFreeHost(w_host);
     cudaFreeHost(w_host2);
     cudaFreeHost(w_host3);
-    cudaFreeHost(host_B1);
-    cudaFreeHost(host_B2);
-    cudaFreeHost(host_L);
+    // cudaFreeHost(host_B1);
+    // cudaFreeHost(host_B2);
+    // cudaFreeHost(host_L);
 
     B::delete_vector_G1(H);
 
