@@ -277,6 +277,53 @@ void output_g1_multiples(int C, const std::vector<G1<ppT>> &vec, FILE *output) {
 }
 
 template<typename ppT>
+void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT>> &vec, FILE *output) {
+    // If vec = [P0, ..., Pn], then multiples holds an array
+    //
+    // [    P0, ...,     Pn,
+    //     2P0, ...,    2Pn,
+    //     3P0, ...,    3Pn,
+    //          ...,
+    //  2^(C-1) P0, ..., 2^(C-1) Pn]
+    std::vector<G1<ppT>> multiples[chunks];
+    size_t len = vec.size();
+
+    int chunk_size = len / num_chunks;
+    printf("about to chunk the group multiples vector\n");
+    // const char *c_mults = reinterpret_cast<const char *>(B1_mults_host);
+    for (size_t chunk = 0; chunk < num_chunks; chunk++) {
+        size_t start_index = i * chunk_size;
+        if (chunk == CHUNKS - 1) {
+            chunk_size = chunk_size + 1;
+        } 
+        size_t end_index = start_index + chunk_size;
+        printf("chunk size: %ld\n", chunk_size);
+        printf("start index: %ld\n", start_index);
+        printf("end index: %ld\n", end_index);
+        multiples[i].resize(chunk_size * ((1U << C) - 1));
+
+        // Copy chunk from vector into v
+        std::copy(vec.begin() + start_index, vec.end() + end_index, multiples[i].begin());
+        for (size_t i = 1; i < (1U << C) - 1; ++i) {
+            size_t prev_row_offset = (i-1)*chunk_size;
+            size_t curr_row_offset = i*chunk_size;
+    #ifdef MULTICORE
+    #pragma omp parallel for
+    #endif
+            for (size_t j = 0; j < chunk_size; ++j)
+                multiples[i][curr_row_offset + j] = vec[start_index + j] + multiples[prev_row_offset + j];
+        }
+
+        if (multiples[i].size() != ((1U << C) - 1)*chunk_size) {
+            fprintf(stderr, "Broken preprocessing table: got %zu, expected %zu\n",
+                    multiples[i].size(), ((1U << C) - 1) * chunk_size);
+            abort();
+        }
+        write_g1_vec<ppT>(output, multiples[i]);
+    }
+}
+
+template<typename ppT>
 void output_g2_multiples(int C, const std::vector<G2<ppT>> &vec, FILE *output) {
     // If vec = [P0, ..., Pn], then multiples holds an array
     //
@@ -318,6 +365,7 @@ void run_preprocess(const char *params_path, const char *output_path)
     // We will produce 2^C precomputed points [i]P for i = 1..2^C
     // for every input point P
     static constexpr size_t C = 5;
+    static constexpr size_t chunks = 4;
 
     size_t d = params.d, m =  params.m;
     printf("d = %zu, m = %zu, C = %zu\n", d, m, C);
@@ -327,7 +375,8 @@ void run_preprocess(const char *params_path, const char *output_path)
     // printf("Processing A...\n");
     // output_g1_multiples<ppT>(C, params.A, output);
     printf("Processing B1...\n");
-    output_g1_multiples<ppT>(C, params.B1, output);
+    // output_g1_multiples<ppT>(C, params.B1, output);
+    output_g1_multiples_chunked<ppT>(C, chunks, params.B1, output);
     printf("Processing B2...\n");
     output_g2_multiples<ppT>(C, params.B2, output);
     printf("Processing L...\n");

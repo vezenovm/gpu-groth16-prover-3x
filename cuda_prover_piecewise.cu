@@ -243,22 +243,23 @@ void run_prover(
     printf("B2_mults_size: %ld\n", B2_mults_size);
     printf("L_mults_size: %ld\n", L_mults_size);
 
+    size_t m_chunked = m / CHUNKS;
+    printf("m / CHUNKS: %ld\n", m_chunked);
+    size_t B_m_chunked = m_chunked;
+    size_t L_m_chunked = m_chunked;
+
+    int B_m_chunks[CHUNKS];
+    int L_m_chunks[CHUNKS];
+    printf("about to allocate out ptrs\n");
+
     // Previous location for where memory was declared
     // auto A_mults = load_points_affine_async<ECp>(sA, ((1U << C) - 1)*(m + 1), preprocessed_file);
     // auto out_A = allocate_memory(out_size);
 
-    printf("about to allocate B1\n");
 
-    void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
-    // printf("B1_mults_host: %p\n", B1_mults_host);
-
-    printf("about to allocate B2\n");
-    void *B2_mults_host = load_points_affine_host<ECpe>(((1U << C) - 1)*(m + 1), preprocessed_file);
-
-    printf("about to allocate L\n");
-    void *L_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
-
-    fclose(preprocessed_file);
+    void *B1_mults_host_chunked[CHUNKS];
+    void *B2_mults_host_chunked[CHUNKS];
+    void *L_mults_host_chunked[CHUNKS];
 
     // Each of the CHUNK'd arrays is an output of a multiexponentation 
     var_ptr out_B1[CHUNKS];
@@ -269,87 +270,23 @@ void run_prover(
     var *host_B2[CHUNKS];
     var *host_L[CHUNKS];
 
-    // std::unique_ptr<var> B1_mults_host_chunked[CHUNKS];
-    void *B1_mults_host_chunked[CHUNKS];
-    void *B2_mults_host_chunked[CHUNKS];
-    void *L_mults_host_chunked[CHUNKS];
-    // originally how memory is laid out for multiples
-    // If vec = [P0, ..., Pn], then multiples holds an array
-    //
-    // [    P0, ...,     Pn,
-    //     2P0, ...,    2Pn,
-    //     3P0, ...,    3Pn,
-    //          ...,
-    //  2^(C-1) P0, ..., 2^(C-1) Pn]
+    printf("about to allocate B1\n");
 
-    size_t m_chunked = m / CHUNKS;
-    printf("m / CHUNKS: %ld\n", m_chunked);
-    size_t B_m_chunked = m_chunked;
-    size_t L_m_chunked = m_chunked;
-
-    int B_m_chunks[CHUNKS];
-    int L_m_chunks[CHUNKS];
-    printf("about to allocate out ptrs\n");
-    // const char *c_mults = reinterpret_cast<const char *>(B1_mults_host);
+    // void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
+    
+    int chunk_size = len / num_chunks;
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
-        // size_t j = chunk * B_m_chunks[chunk];
-        size_t j; 
+        // if (chunk == CHUNKS - 1) {
+        //     chunk_size = chunk_size + 1;
+        // }  
         if (chunk == CHUNKS - 1) {
             B_m_chunks[chunk] = m_chunked + 1;
-            // printf("(m + 1) / CHUNKS: %ld\n", B_m_chunked);
             L_m_chunks[chunk] = m_chunked - 1;
-            // printf("(m - 1) / CHUNKS: %ld\n", L_m_chunked);
-            j = chunk * (B_m_chunks[chunk] - 1);
         } else {
             B_m_chunks[chunk] = m_chunked;
             L_m_chunks[chunk] = m_chunked;
-
-            j = chunk * B_m_chunks[chunk];
         }
-
-        printf("B_m_chunks[chunk]: %ld\n", B_m_chunks[chunk]);
-        printf("(chunk * B_m_chunks[chunk]): %ld\n", (chunk * B_m_chunks[chunk]));
-        printf("get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]): %ld\n", get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
-        cudaMallocHost((void **)&B1_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
-
-        size_t B1_len = m+1;
-        size_t B2_len = m+1;
-        size_t L_len = m-1;
-        printf("about to organize chunked multiples arrays\n");
-        size_t G1_size = get_aff_total_bytes<ECp>(1);
-        printf("G1_size: %ld\n", G1_size);
-        size_t G2_size = get_aff_total_bytes<ECpe>(1);
-        printf("G2_size: %ld\n", G2_size);
-        
-        // const char *c_mults_chunked = reinterpret_cast<const char *>(B1_mults_host_chunked[chunk]);
-
-        printf("NEW INNER CHUNK LOOP *********************************************** NEW INNER CHUNK LOOP\n");
-        for (size_t i = 0; i < (1U << C) - 1; ++i) {
-            size_t prev_row_offset = (i-1)*B1_len;
-            size_t curr_row_offset = i*B1_len;
-            size_t chunked_row_offset = B_m_chunks[chunk] * i;
-            size_t j_bound = j + B_m_chunks[chunk];
-            // printf("(chunk * j): %ld\n", chunk * j );
-            // printf("B_m_chunks[chunk]: %ld\n", B_m_chunks[chunk]);
-            size_t aff_bytes_offset_j = get_aff_total_bytes<ECp>(curr_row_offset + j);
-            printf("NEW LOOP *********************************************** NEW LOOP\n");
-            printf("j: %ld, j_bound: %ld, i: %ld\n", j, j_bound, i);
-            printf("curr_row_offset: %ld, j: %ld\n", curr_row_offset, j);
-            printf("get_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n", aff_bytes_offset_j);
-            printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i): %ld\n", get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i)));
-
-            // void *res = c_mults_chunked + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
-            // void *source = c_mults + get_aff_total_bytes<ECp>(curr_row_offset + j);
-            char *res = ((char *)B1_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
-            const char *source = ((const char *)B1_mults_host) + get_aff_total_bytes<ECp>(curr_row_offset + j);
-
-            // char *c_mults_chunked = reinterpret_cast<char *>(res);
-            // const char *c_mults = reinterpret_cast<const char *>(source);
-
-            std::memcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]));
-            // gpuErrchk( cudaMemcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]), cudaMemcpyHostToHost) );
-        }
-        printf("done chunking multiples arrays\n");
+        B1_mults_host_chunked[i] = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         out_B2[chunk] = allocate_memory(out_size, 1);
@@ -362,10 +299,17 @@ void run_prover(
         // printf("host_B2: %p\n", host_B2[i]);
 
         cudaMallocHost((void **)&host_L[chunk], out_size);
-        // printf("host_L: %p\n", host_L[i]);
     }
-    printf("finished allocating out ptrs\n");
-    
+    // printf("B1_mults_host: %p\n", B1_mults_host);
+
+    printf("about to allocate B2\n");
+    void *B2_mults_host = load_points_affine_host<ECpe>(((1U << C) - 1)*(m + 1), preprocessed_file);
+
+    printf("about to allocate L\n");
+    void *L_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m - 1), preprocessed_file);
+
+    fclose(preprocessed_file);
+
     // printf("about to allocate A\n");
     // ec_reduce_straus<ECp, C, R>(sA, out_A.get(), A_mults.get(), w, m + 1);
     // var *host_A = (var *) malloc (out_size);
