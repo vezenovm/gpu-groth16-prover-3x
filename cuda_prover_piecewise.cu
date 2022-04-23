@@ -287,7 +287,7 @@ void run_prover(
         void *source = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
         // B1_mults_host_chunked[chunk] = source;
         printf("chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
-        gpuErrchk( cudaMallocHost(B1_mults_host_chunked[chunk], chunk_size) );
+        gpuErrchk( cudaMallocHost((void **)&B1_mults_host_chunked[chunk], chunk_size) );
         std::memcpy(B1_mults_host_chunked[chunk], source, chunk_size);
         printf("chunk_offset: %ld, chunk_size: %p\n", chunk_offset, chunk_size);
 
