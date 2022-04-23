@@ -283,10 +283,12 @@ void run_prover(
             L_m_chunks[chunk] = m_chunked;
         }
         size_t chunk_offset = get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[0]*chunk);
+        size_t chunk_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]);
         void *source = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
-        B1_mults_host_chunked[chunk] = source;
+        // B1_mults_host_chunked[chunk] = source;
+        std::memcpy(B1_mults_host_chunked[chunk], source, chunk_size)
         printf("chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
-        printf("chunk_offset, B1_mults_host_chunked[%ld]: %p\n", chunk_offset, B1_mults_host_chunked[chunk]);
+        printf("chunk_offset: %ld, chunk_size: %p\n", chunk_offset, chunk_size);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         printf("out_B1[%d]: %p\n", chunk, out_B1[chunk].get());
