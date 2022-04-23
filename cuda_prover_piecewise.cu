@@ -257,7 +257,7 @@ void run_prover(
     // auto out_A = allocate_memory(out_size);
 
 
-    void *B1_mults_host_chunked[CHUNKS];
+    var *B1_mults_host_chunked[CHUNKS];
     void *B2_mults_host_chunked[CHUNKS];
     void *L_mults_host_chunked[CHUNKS];
 
@@ -275,9 +275,6 @@ void run_prover(
     // void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
     
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
-        // if (chunk == CHUNKS - 1) {
-        //     chunk_size = chunk_size + 1;
-        // }  
         if (chunk == CHUNKS - 1) {
             B_m_chunks[chunk] = m_chunked + 1;
             L_m_chunks[chunk] = m_chunked - 1;
@@ -374,6 +371,7 @@ void run_prover(
         printf("w_host + i * (B_m_chunked) * ELT_BYTES: %p\n", w_host + (i * (B_m_chunked) * ELT_BYTES));
         printf("B_m_chunked * ELT_BYTES: %ld\n", B_m_chunked * ELT_BYTES);
         // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
 
         if (i == CHUNKS - 1) {
             printf("get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)): %p\n", get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)) );
@@ -450,6 +448,9 @@ void run_prover(
             gpuErrchk( cudaMemcpyAsync(w3.get(), ((char *)w_host3) + ((2+(i * L_m_chunked)) * ELT_BYTES), L_m_chunked * ELT_BYTES, cudaMemcpyHostToDevice, sL) ); 
 
         }
+
+        cudaDeviceSynchronize();
+
         ec_reduce_straus<ECp, C, R>(sB1, out_B1[i].get(), B1_mults.get(), w1.get(), B_m_chunked);
         // ec_reduce<ECp>(sB1, )
         printf("out of ec reduce B1, on host\n");
@@ -468,6 +469,8 @@ void run_prover(
         printf("w3.get() + (primary_input_size + 1) * ELT_LIMBS: %p\n", w3.get() + (primary_input_size + 1) * ELT_LIMBS);
         ec_reduce_straus<ECp, C, R>(sL, out_L[i].get(), L_mults.get(), w3.get(), L_m_chunked);
         printf("out of ec reduce L, on host\n");
+
+        cudaDeviceSynchronize();
 
         printf("i: %ld, out_B1[%d].get(): %p\n", i, out_B1[i].get()); 
         gpuErrchk( cudaMemcpyAsync(host_B1[i], out_B1[i].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
@@ -509,6 +512,11 @@ void run_prover(
         B1_evaluations[i] = B::read_pt_ECp(host_B1[i]);
         B::print_G1(B1_evaluations[i]);
     }
+
+    auto binary_op = [](G1 *p1, G1 *p2){return B::G1_add(p1, p2); };
+    G1 *final_B1_host = std::accumulate(B1_evaluations.begin() + 1, B1_evaluations.end(), B1_evaluations[0], binary_op);
+    printf("final_B1_host:\n");
+    B::print_G1(final_B1_host);
 
     auto binary_op = [](G1 *p1, G1 *p2){return B::G1_add(p1, p2); };
     G1 *final_B1_host = std::accumulate(B1_evaluations.begin() + 1, B1_evaluations.end(), B1_evaluations[0], binary_op);
