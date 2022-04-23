@@ -300,7 +300,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT
         printf("chunk size: %ld\n", chunk_size);
         printf("start index: %ld\n", start_index);
         printf("end index: %ld\n", end_index);
-        multiples[i].resize(chunk_size * ((1U << C) - 1));
+        multiples[chunk].resize(chunk_size * ((1U << C) - 1));
 
         // Copy chunk from vector into v
         std::copy(vec.begin() + start_index, vec.end() + end_index, multiples[chunk].begin());
