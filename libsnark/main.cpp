@@ -289,7 +289,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT
     size_t len = vec.size();
 
     int chunk_size = len / num_chunks;
-    printf("about to chunk the group multiples vector\n");
+    printf("about to chunk the group multiples vector, len of multiples: %ld\n", len);
     // const char *c_mults = reinterpret_cast<const char *>(B1_mults_host);
     for (size_t chunk = 0; chunk < num_chunks; chunk++) {
         size_t start_index = chunk * chunk_size;
