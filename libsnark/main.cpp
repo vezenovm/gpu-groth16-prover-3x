@@ -293,7 +293,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT
     // const char *c_mults = reinterpret_cast<const char *>(B1_mults_host);
     for (size_t chunk = 0; chunk < num_chunks; chunk++) {
         size_t start_index = chunk * chunk_size;
-        if (chunk == CHUNKS - 1) {
+        if (chunk == num_chunks - 1) {
             chunk_size = chunk_size + 1;
         } 
         size_t end_index = start_index + chunk_size;
