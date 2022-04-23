@@ -311,7 +311,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT
     #pragma omp parallel for
     #endif
             for (size_t j = 0; j < chunk_size; ++j)
-                multiples[chunk][curr_row_offset + j] = vec[start_index + j] + multiples[prev_row_offset + j];
+                multiples[chunk][curr_row_offset + j] = vec[start_index + j] + multiples[chunk][prev_row_offset + j];
         }
 
         if (multiples[chunk].size() != ((1U << C) - 1)*chunk_size) {
