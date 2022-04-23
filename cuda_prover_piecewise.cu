@@ -271,7 +271,7 @@ void run_prover(
 
     // var *host_B1[CHUNKS];
     var *host_B1;
-    gpuErrchk( cudaMallocHost((void **)&host_B1, out_size*CHUNKS) );
+    gpuErrchk( cudaMallocHost(&host_B1, out_size*CHUNKS) );
     var *host_B2[CHUNKS];
     var *host_L[CHUNKS];
 
@@ -298,13 +298,13 @@ void run_prover(
         printf("2: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked + chunk);
         printf("3: B1_mults_host_chunked + chunk_offset: %p\n", B1_mults_host_chunked + chunk_offset);
 
-        out_B1[chunk] = allocate_memory(out_size, 1);
-        printf("out_B1[%d]: %p\n", chunk, out_B1[chunk].get());
+        // out_B1[chunk] = allocate_memory(out_size, 1);
+        // printf("out_B1[%d]: %p\n", chunk, out_B1[chunk].get());
 
         out_B2[chunk] = allocate_memory(out_size, 1);
         out_L[chunk] = allocate_memory(out_size, 1);
 
-        cudaMallocHost(&host_B1[chunk], out_size);
+        // cudaMallocHost(&host_B1[chunk], out_size);
         // printf("host_B1: %p\n", host_B1[i]);
 
         cudaMallocHost(&host_B2[chunk], out_size);
@@ -460,7 +460,7 @@ void run_prover(
 
         cudaDeviceSynchronize();
 
-        ec_reduce_straus<ECp, C, R>(sB1, out_B1.get() + (out_size * chunk), B1_mults.get(), w1.get(), B_m_chunked);
+        ec_reduce_straus<ECp, C, R>(sB1, out_B1.get() + (out_size * i), B1_mults.get(), w1.get(), B_m_chunked);
         // ec_reduce<ECp>(sB1, )
         printf("out of ec reduce B1, on host\n");
         printf("i * B1_mults_size_chunked: %ld\n", i * B1_mults_size_chunked);
@@ -482,7 +482,7 @@ void run_prover(
         cudaDeviceSynchronize();
 
         printf("out_B1[%d].get(): %p\n", i, out_B1[i].get()); 
-        gpuErrchk( cudaMemcpyAsync(host_B1 + (out_size * chunk), out_B1.get() + (out_size * chunk), out_size, cudaMemcpyDeviceToHost, sB1) );
+        gpuErrchk( cudaMemcpyAsync(host_B1 + (out_size * i), out_B1.get() + (out_size * i), out_size, cudaMemcpyDeviceToHost, sB1) );
         printf("initiated B1 copy to host\n");
 
         printf("out_B2[%d].get(): %p\n", i, out_B2[i].get()); 
@@ -513,7 +513,7 @@ void run_prover(
 
     cudaStreamSynchronize(sB1);
     printf("synchronized sB1\n");
-    printf("host_B1: %" PRIu64 "\n", *(host_B1[0]));
+    printf("*(host_B1 + 0): %" PRIu64 "\n", *(host_B1 + 0));
     // G1 *evaluation_Bt1 = B::read_pt_ECp(host_B1);
     // G1 *B1_evaluations[CHUNKS];
     std::vector<G1*> B1_evaluations(CHUNKS);
