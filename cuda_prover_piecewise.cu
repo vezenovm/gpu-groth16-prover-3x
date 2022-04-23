@@ -284,7 +284,7 @@ void run_prover(
         }
         size_t chunk_offset = get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[0]*chunk);
         void *source = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
-        B1_mults_host_chunked[chunk_offset] = source;
+        B1_mults_host_chunked[chunk] = source;
         printf("chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
         printf("chunk_offset, B1_mults_host_chunked[%ld]: %p\n", chunk_offset, B1_mults_host_chunked[chunk]);
 
@@ -426,7 +426,9 @@ void run_prover(
             //     cudaMemcpyHostToDevice, 
             //     sB1) );
             printf("B1_mults_host_chunked[%ld]: %p\n", i, B1_mults_host_chunked[i]);
-            
+            printf("get_aff_total_bytes<ECp>(((1U << C) - 1)* i * B_m_chunks[i]): %ld\n", get_aff_total_bytes<ECp>(((1U << C) - 1)* i * B_m_chunks[i]) );
+            printf("B1_mults_host_chunked[%ld]: %p\n", i, B1_mults_host_chunked[get_aff_total_bytes<ECp>(((1U << C) - 1)* i * B_m_chunks[i])]);
+
             gpuErrchk( 
                 cudaMemcpyAsync(B1_mults.get(), 
                 B1_mults_host_chunked[get_aff_total_bytes<ECp>(((1U << C) - 1)* i * B_m_chunks[i])], 
