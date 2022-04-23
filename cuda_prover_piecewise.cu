@@ -283,7 +283,8 @@ void run_prover(
             L_m_chunks[chunk] = m_chunked;
         }
         size_t chunk_offset = get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[0]);
-        B1_mults_host_chunked[chunk] = (var *)load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
+        var *dest = B1_mults_host_chunked + chunk_offset;
+        dest = (var *)load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         out_B2[chunk] = allocate_memory(out_size, 1);
