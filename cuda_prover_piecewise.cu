@@ -118,7 +118,7 @@ load_scalars_async_host(size_t n, FILE *inputs)
 
     // void *scalars_buffer = (void *) malloc (total_bytes);
     void *scalars_buffer;
-    gpuErrchk( cudaMallocHost(&scalars_buffer, total_bytes) );
+    gpuErrchk( cudaMallocHost(scalars_buffer, total_bytes) );
     if (fread(scalars_buffer, total_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read scalars\n");
         abort();
@@ -142,7 +142,7 @@ load_points_affine_host(size_t n, FILE *inputs)
 
     // void *aff_bytes_buffer = (void *) malloc (total_aff_bytes);
     void *aff_bytes_buffer;
-    gpuErrchk( cudaMallocHost((void **)&aff_bytes_buffer, total_aff_bytes) );
+    gpuErrchk( cudaMallocHost(aff_bytes_buffer, total_aff_bytes) );
     if (fread(aff_bytes_buffer, total_aff_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read all curve poinst\n");
         abort();
@@ -585,15 +585,11 @@ void run_prover(
         cudaFreeHost(host_B2[chunk]);
         cudaFreeHost(host_L[chunk]);
     }
-    // cudaFreeHost(B1_mults_host_chunked);
     cudaFreeHost(B2_mults_host);
     cudaFreeHost(L_mults_host);
     cudaFreeHost(w_host);
     cudaFreeHost(w_host2);
     cudaFreeHost(w_host3);
-    // cudaFreeHost(host_B1);
-    // cudaFreeHost(host_B2);
-    // cudaFreeHost(host_L);
 
     B::delete_vector_G1(H);
 
