@@ -282,7 +282,7 @@ void run_prover(
             B_m_chunks[chunk] = m_chunked;
             L_m_chunks[chunk] = m_chunked;
         }
-        B1_mults_host_chunked[chunk] = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
+        B1_mults_host_chunked[chunk] = (var *)load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         out_B2[chunk] = allocate_memory(out_size, 1);
