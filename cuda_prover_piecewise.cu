@@ -286,7 +286,7 @@ void run_prover(
         void *source = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
         B1_mults_host_chunked[chunk] = source;
         printf("chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
-        printf("chunk_offset, B1_mults_host_chunked[%ld]: %p\n", chunk_offset, B1_mults_host_chunked[chunk_offset]);
+        printf("chunk_offset, B1_mults_host_chunked[%ld]: %p\n", chunk_offset, B1_mults_host_chunked[chunk]);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         out_B2[chunk] = allocate_memory(out_size, 1);
