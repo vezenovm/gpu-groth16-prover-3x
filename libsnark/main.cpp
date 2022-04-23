@@ -292,7 +292,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT
     printf("about to chunk the group multiples vector\n");
     // const char *c_mults = reinterpret_cast<const char *>(B1_mults_host);
     for (size_t chunk = 0; chunk < num_chunks; chunk++) {
-        size_t start_index = i * chunk_size;
+        size_t start_index = chunk * chunk_size;
         if (chunk == CHUNKS - 1) {
             chunk_size = chunk_size + 1;
         } 
@@ -303,7 +303,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT
         multiples[i].resize(chunk_size * ((1U << C) - 1));
 
         // Copy chunk from vector into v
-        std::copy(vec.begin() + start_index, vec.end() + end_index, multiples[i].begin());
+        std::copy(vec.begin() + start_index, vec.end() + end_index, multiples[chunk].begin());
         for (size_t i = 1; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*chunk_size;
             size_t curr_row_offset = i*chunk_size;
@@ -311,15 +311,15 @@ void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT
     #pragma omp parallel for
     #endif
             for (size_t j = 0; j < chunk_size; ++j)
-                multiples[i][curr_row_offset + j] = vec[start_index + j] + multiples[prev_row_offset + j];
+                multiples[chunk][curr_row_offset + j] = vec[start_index + j] + multiples[prev_row_offset + j];
         }
 
-        if (multiples[i].size() != ((1U << C) - 1)*chunk_size) {
+        if (multiples[chunk].size() != ((1U << C) - 1)*chunk_size) {
             fprintf(stderr, "Broken preprocessing table: got %zu, expected %zu\n",
-                    multiples[i].size(), ((1U << C) - 1) * chunk_size);
+                    multiples[chunk].size(), ((1U << C) - 1) * chunk_size);
             abort();
         }
-        write_g1_vec<ppT>(output, multiples[i]);
+        write_g1_vec<ppT>(output, multiples[chunk]);
     }
 }
 
