@@ -289,6 +289,8 @@ void run_prover(
         printf("chunk_offset, B1_mults_host_chunked[%ld]: %p\n", chunk_offset, B1_mults_host_chunked[chunk]);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
+        printf("out_B1[%ld]: %p\n", chunk, out_B1[i].get());
+
         out_B2[chunk] = allocate_memory(out_size, 1);
         out_L[chunk] = allocate_memory(out_size, 1);
 
@@ -389,7 +391,7 @@ void run_prover(
            
             gpuErrchk( 
                 cudaMemcpyAsync(B1_mults.get(), 
-                B1_mults_host_chunked[i], 
+                B1_mults_host_chunked + get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunks[i] - 1)), 
                 get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]), 
                 cudaMemcpyHostToDevice, 
                 sB1) );
@@ -427,7 +429,7 @@ void run_prover(
             
             gpuErrchk( 
                 cudaMemcpyAsync(B1_mults.get(), 
-                B1_mults_host_chunked[i], 
+                B1_mults_host_chunked + get_aff_total_bytes<ECp>(((1U << C) - 1)* i * B_m_chunks[i]), 
                 get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]), 
                 cudaMemcpyHostToDevice, 
                 sB1) );
@@ -477,10 +479,11 @@ void run_prover(
 
         cudaDeviceSynchronize();
 
-        printf("i: %ld, out_B1[%d].get(): %p\n", i, out_B1[i].get()); 
-        gpuErrchk( cudaMemcpyAsync(host_B1[i], out_B1[i].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
+        printf("out_B1[%d].get(): %p\n", i, out_B1[i].get()); 
+        gpuErrchk( cudaMemcpyAsync(host_B1 + (i * out_size), out_B1[i*out_size].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
         printf("initiated B1 copy to host\n");
 
+        printf("out_B2[%d].get(): %p\n", i, out_B2[i].get()); 
         gpuErrchk( cudaMemcpyAsync(host_B2[i], out_B2[i].get(), out_size, cudaMemcpyDeviceToHost, sB2) );
         printf("initiated B2 copy to host\n");
 
@@ -581,9 +584,10 @@ void run_prover(
     cudaStreamDestroy(sB2);
     cudaStreamDestroy(sL);
 
-    for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
-        cudaFreeHost(B1_mults_host_chunked[chunk]);
-    }
+    // for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
+        // cudaFreeHost(B1_mults_host_chunked[chunk]);
+    // }
+    cudaFreeHost(B1_mults_host_chunked);
     cudaFreeHost(B2_mults_host);
     cudaFreeHost(L_mults_host);
     cudaFreeHost(w_host);
