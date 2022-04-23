@@ -278,7 +278,7 @@ void run_prover(
     // void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
     
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
-        printf("1: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
+        printf("1: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked + chunk);
         if (chunk == CHUNKS - 1) {
             B_m_chunks[chunk] = m_chunked + 1;
             L_m_chunks[chunk] = m_chunked - 1;
@@ -293,8 +293,8 @@ void run_prover(
         // gpuErrchk( cudaMallocHost(&B1_mults_host_chunked[chunk], chunk_size) );
         std::memcpy(B1_mults_host_chunked + chunk_offset, source, chunk_size);
         printf("chunk_offset: %ld, chunk_size: %p\n", chunk_offset, chunk_size);
-        printf("2: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
-        printf("3: B1_mults_host_chunked: %p\n", chunk, B1_mults_host_chunked + chunk_offset);
+        printf("2: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked + chunk);
+        printf("3: B1_mults_host_chunked + chunk_offset: %p\n", B1_mults_host_chunked + chunk_offset);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         printf("out_B1[%d]: %p\n", chunk, out_B1[chunk].get());
@@ -385,7 +385,7 @@ void run_prover(
             //     get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunked), 
             //     cudaMemcpyHostToDevice, 
             //     sB1) );
-            printf("B1_mults_host_chunked[%ld]: %p\n", i, B1_mults_host_chunked[i]);
+            printf("B1_mults_host_chunked[%ld]: %p\n", i, B1_mults_host_chunked + i);
            
             gpuErrchk( 
                 cudaMemcpyAsync(B1_mults.get(), 
@@ -423,7 +423,7 @@ void run_prover(
             //     get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunked), 
             //     cudaMemcpyHostToDevice, 
             //     sB1) );
-            printf("B1_mults_host_chunked[%ld]: %p\n", i, B1_mults_host_chunked[i]);
+            printf("B1_mults_host_chunked[%ld]: %p\n", i, B1_mults_host_chunked + i);
             printf("get_aff_total_bytes<ECp>(((1U << C) - 1)* i * B_m_chunks[i]): %ld\n", get_aff_total_bytes<ECp>(((1U << C) - 1)* i * B_m_chunks[i]) );
             // printf("B1_mults_host_chunked[%ld]: %p\n", i, B1_mults_host_chunked[get_aff_total_bytes<ECp>(((1U << C) - 1)* i * B_m_chunks[i])]);
 
@@ -583,9 +583,10 @@ void run_prover(
     cudaStreamDestroy(sB1);
     cudaStreamDestroy(sB2);
     cudaStreamDestroy(sL);
-
+    
+    cudaFreeHost(B1_mults_host_chunked);
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
-        cudaFreeHost(B1_mults_host_chunked[chunk]);
+        // cudaFreeHost(B1_mults_host_chunked[chunk]);
         cudaFreeHost(host_B1[chunk]);
         cudaFreeHost(host_B2[chunk]);
         cudaFreeHost(host_L[chunk]);
