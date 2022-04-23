@@ -265,11 +265,13 @@ void run_prover(
     void *L_mults_host_chunked[CHUNKS];
 
     // Each of the CHUNK'd arrays is an output of a multiexponentation 
-    var_ptr out_B1[CHUNKS];
+    auto out_B1 = allocate_memory(out_size*CHUNKS, 1);
     var_ptr out_B2[CHUNKS];
     var_ptr out_L[CHUNKS];
 
-    var *host_B1[CHUNKS];
+    // var *host_B1[CHUNKS];
+    var *host_B1;
+    gpuErrchk( cudaMallocHost((void **)&host_B1, out_size*CHUNKS) );
     var *host_B2[CHUNKS];
     var *host_L[CHUNKS];
 
@@ -458,7 +460,7 @@ void run_prover(
 
         cudaDeviceSynchronize();
 
-        ec_reduce_straus<ECp, C, R>(sB1, out_B1[i].get(), B1_mults.get(), w1.get(), B_m_chunked);
+        ec_reduce_straus<ECp, C, R>(sB1, out_B1.get() + (out_size * chunk), B1_mults.get(), w1.get(), B_m_chunked);
         // ec_reduce<ECp>(sB1, )
         printf("out of ec reduce B1, on host\n");
         printf("i * B1_mults_size_chunked: %ld\n", i * B1_mults_size_chunked);
@@ -480,7 +482,7 @@ void run_prover(
         cudaDeviceSynchronize();
 
         printf("out_B1[%d].get(): %p\n", i, out_B1[i].get()); 
-        gpuErrchk( cudaMemcpyAsync(host_B1[i], out_B1[i].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
+        gpuErrchk( cudaMemcpyAsync(host_B1 + (out_size * chunk), out_B1.get() + (out_size * chunk), out_size, cudaMemcpyDeviceToHost, sB1) );
         printf("initiated B1 copy to host\n");
 
         printf("out_B2[%d].get(): %p\n", i, out_B2[i].get()); 
@@ -517,7 +519,7 @@ void run_prover(
     std::vector<G1*> B1_evaluations(CHUNKS);
 
     for (size_t i = 0; i < CHUNKS; i++) {
-        B1_evaluations[i] = B::read_pt_ECp(host_B1[i]);
+        B1_evaluations[i] = B::read_pt_ECp(host_B1 + i * out_size);
         B::print_G1(B1_evaluations[i]);
     }
 
@@ -585,9 +587,10 @@ void run_prover(
     cudaStreamDestroy(sL);
     
     cudaFreeHost(B1_mults_host_chunked);
+    cudaFreeHost(host_B1);
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
         // cudaFreeHost(B1_mults_host_chunked[chunk]);
-        cudaFreeHost(host_B1[chunk]);
+        // cudaFreeHost(host_B1[chunk]);
         cudaFreeHost(host_B2[chunk]);
         cudaFreeHost(host_L[chunk]);
     }
