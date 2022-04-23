@@ -274,7 +274,6 @@ void run_prover(
 
     // void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
     
-    int chunk_size = len / num_chunks;
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
         // if (chunk == CHUNKS - 1) {
         //     chunk_size = chunk_size + 1;
@@ -286,7 +285,7 @@ void run_prover(
             B_m_chunks[chunk] = m_chunked;
             L_m_chunks[chunk] = m_chunked;
         }
-        B1_mults_host_chunked[i] = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
+        B1_mults_host_chunked[chunk] = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         out_B2[chunk] = allocate_memory(out_size, 1);
@@ -574,7 +573,9 @@ void run_prover(
     cudaStreamDestroy(sB2);
     cudaStreamDestroy(sL);
 
-    cudaFreeHost(B1_mults_host);
+    for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
+        cudaFreeHost(B1_mults_host_chunked[chunk]);
+    }
     cudaFreeHost(B2_mults_host);
     cudaFreeHost(L_mults_host);
     cudaFreeHost(w_host);
