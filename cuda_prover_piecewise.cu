@@ -373,7 +373,7 @@ void run_prover(
         // cudaDeviceSynchronize();
 
         if (i == CHUNKS - 1) {
-            printf("get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]): %ld\n", gget_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]) );
+            printf("get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]): %ld\n", get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]) );
             // gpuErrchk( 
             //     cudaMemcpyAsync(B1_mults.get(), 
             //     B1_mults_host + get_aff_total_bytes<ECp>(((1U << C) - 1)* i * (B_m_chunked - 1)), 
