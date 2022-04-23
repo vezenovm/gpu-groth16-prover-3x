@@ -275,6 +275,7 @@ void run_prover(
     // void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
     
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
+        printf("1: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
         if (chunk == CHUNKS - 1) {
             B_m_chunks[chunk] = m_chunked + 1;
             L_m_chunks[chunk] = m_chunked - 1;
@@ -288,8 +289,8 @@ void run_prover(
         // B1_mults_host_chunked[chunk] = source;
         gpuErrchk( cudaMallocHost(&B1_mults_host_chunked[chunk], chunk_size) );
         std::memcpy(B1_mults_host_chunked[chunk], source, chunk_size);
-        printf("chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
         printf("chunk_offset: %ld, chunk_size: %p\n", chunk_offset, chunk_size);
+        printf("2: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         printf("out_B1[%d]: %p\n", chunk, out_B1[chunk].get());
@@ -297,13 +298,13 @@ void run_prover(
         out_B2[chunk] = allocate_memory(out_size, 1);
         out_L[chunk] = allocate_memory(out_size, 1);
 
-        cudaMallocHost((void **)&host_B1[chunk], out_size);
+        cudaMallocHost(&host_B1[chunk], out_size);
         // printf("host_B1: %p\n", host_B1[i]);
 
-        cudaMallocHost((void **)&host_B2[chunk], out_size);
+        cudaMallocHost(&host_B2[chunk], out_size);
         // printf("host_B2: %p\n", host_B2[i]);
 
-        cudaMallocHost((void **)&host_L[chunk], out_size);
+        cudaMallocHost(&host_L[chunk], out_size);
     }
     // printf("B1_mults_host: %p\n", B1_mults_host);
 
