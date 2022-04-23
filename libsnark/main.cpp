@@ -285,7 +285,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT
     //     3P0, ...,    3Pn,
     //          ...,
     //  2^(C-1) P0, ..., 2^(C-1) Pn]
-    std::vector<G1<ppT>> multiples[chunks];
+    std::vector<G1<ppT>> multiples[num_chunks];
     size_t len = vec.size();
 
     int chunk_size = len / num_chunks;
