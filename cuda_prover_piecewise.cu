@@ -518,11 +518,6 @@ void run_prover(
     printf("final_B1_host:\n");
     B::print_G1(final_B1_host);
 
-    auto binary_op = [](G1 *p1, G1 *p2){return B::G1_add(p1, p2); };
-    G1 *final_B1_host = std::accumulate(B1_evaluations.begin() + 1, B1_evaluations.end(), B1_evaluations[0], binary_op);
-    printf("final_B1_host:\n");
-    B::print_G1(final_B1_host);
-
     cudaStreamSynchronize(sB2);
     printf("synchronized sB2\n");
     printf("host_B2: %" PRIu64 "\n", *(host_B2[0]));
