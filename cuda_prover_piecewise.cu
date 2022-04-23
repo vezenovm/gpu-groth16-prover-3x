@@ -480,7 +480,7 @@ void run_prover(
         cudaDeviceSynchronize();
 
         printf("out_B1[%d].get(): %p\n", i, out_B1[i].get()); 
-        gpuErrchk( cudaMemcpyAsync(host_B1 + (i * out_size), out_B1[i*out_size].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
+        gpuErrchk( cudaMemcpyAsync(host_B1[i * out_size], out_B1[i*out_size].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
         printf("initiated B1 copy to host\n");
 
         printf("out_B2[%d].get(): %p\n", i, out_B2[i].get()); 
