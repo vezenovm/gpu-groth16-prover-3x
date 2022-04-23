@@ -460,7 +460,7 @@ void run_prover(
 
         cudaDeviceSynchronize();
 
-        ec_reduce_straus<ECp, C, R>(sB1, out_B1.get() + (out_size * i), B1_mults.get(), w1.get(), B_m_chunked);
+        ec_reduce_straus<ECp, C, R>(sB1, out_B1.get() + ((out_size / 8) * i), B1_mults.get(), w1.get(), B_m_chunked);
         // ec_reduce<ECp>(sB1, )
         printf("out of ec reduce B1, on host\n");
         printf("i * B1_mults_size_chunked: %ld\n", i * B1_mults_size_chunked);
@@ -481,8 +481,8 @@ void run_prover(
 
         cudaDeviceSynchronize();
 
-        printf("out_B1[%d].get(): %p\n", i, out_B1.get() + (out_size * i)); 
-        gpuErrchk( cudaMemcpyAsync(host_B1 + (out_size * i), out_B1.get() + (out_size * i), out_size, cudaMemcpyDeviceToHost, sB1) );
+        printf("out_B1[%d].get(): %p\n", i, out_B1.get() + (out_size / 8 * i)); 
+        gpuErrchk( cudaMemcpyAsync(host_B1 + ((out_size / 8) * i), out_B1.get() + ((out_size / 8) * i), out_size, cudaMemcpyDeviceToHost, sB1) );
         printf("initiated B1 copy to host\n");
 
         printf("out_B2[%d].get(): %p\n", i, out_B2[i].get()); 
@@ -519,7 +519,7 @@ void run_prover(
     std::vector<G1*> B1_evaluations(CHUNKS);
 
     for (size_t i = 0; i < CHUNKS; i++) {
-        B1_evaluations[i] = B::read_pt_ECp(host_B1 + i * out_size);
+        B1_evaluations[i] = B::read_pt_ECp(host_B1 + (i * out_size / 8));
         B::print_G1(B1_evaluations[i]);
     }
 
