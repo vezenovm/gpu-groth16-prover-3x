@@ -289,7 +289,7 @@ void run_prover(
         printf("chunk_offset, B1_mults_host_chunked[%ld]: %p\n", chunk_offset, B1_mults_host_chunked[chunk]);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
-        printf("out_B1[%d]: %p\n", chunk, out_B1[i].get());
+        printf("out_B1[%d]: %p\n", chunk, out_B1[chunk].get());
 
         out_B2[chunk] = allocate_memory(out_size, 1);
         out_L[chunk] = allocate_memory(out_size, 1);
