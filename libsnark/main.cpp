@@ -324,7 +324,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT
 }
 
 template<typename ppT>
-void output_g2_multiples(int C, int num_chunks, const std::vector<G2<ppT>> &vec, FILE *output) {
+void output_g2_multiples(int C, const std::vector<G2<ppT>> &vec, FILE *output) {
     // If vec = [P0, ..., Pn], then multiples holds an array
     //
     // [    P0, ...,     Pn,
@@ -356,7 +356,7 @@ void output_g2_multiples(int C, int num_chunks, const std::vector<G2<ppT>> &vec,
 }
 
 template<typename ppT>
-void output_g2_multiples_chunked(int C, const std::vector<G2<ppT>> &vec, FILE *output) {
+void output_g2_multiples_chunked(int C, int num_chunks, const std::vector<G2<ppT>> &vec, FILE *output) {
     // If vec = [P0, ..., Pn], then multiples holds an array
     //
     // [    P0, ...,     Pn,
