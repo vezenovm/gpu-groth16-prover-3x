@@ -298,6 +298,9 @@ void run_prover(
         // printf("3: B1_mults_host_chunked + chunk_offset: %p\n", B1_mults_host_chunked + chunk_offset);
 
         gpuErrchk( cudaMallocHost(&B1_mults_host_chunked[chunk], B_chunk_size) );
+
+        printf("3: after cudaMallocHost, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
+
         std::memcpy(B1_mults_host_chunked[chunk], B1_chunk_source, B_chunk_size);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
