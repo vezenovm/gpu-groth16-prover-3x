@@ -291,7 +291,7 @@ void run_prover(
         size_t chunk_offset = get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[0]*chunk);
         size_t B_chunk_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]);
         size_t L_chunk_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[chunk]);
-        // void *B1_chunk_source = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
+        void *B1_chunk_source = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
         // std::memcpy(B1_mults_host_chunked + chunk_offset, B1_chunk_source, B_chunk_size);
         // printf("chunk_offset: %ld, chunk_size: %p\n", chunk_offset, chunk_size);
         // printf("2: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked + chunk);
