@@ -279,7 +279,8 @@ void run_prover(
     // void *B1_mults_host = load_points_affine_host<ECp>(((1U << C) - 1)*(m + 1), preprocessed_file);
     
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
-        printf("1: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked + chunk);
+        printf("1: chunk, B1_mults_host_chunked + %ld: %p\n", chunk, B1_mults_host_chunked + chunk);
+        printf("2: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
         if (chunk == CHUNKS - 1) {
             B_m_chunks[chunk] = m_chunked + 1;
             L_m_chunks[chunk] = m_chunked - 1;
@@ -290,16 +291,14 @@ void run_prover(
         size_t chunk_offset = get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[0]*chunk);
         size_t B_chunk_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]);
         size_t L_chunk_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[chunk]);
-        // void *source = load_points_affine_host(...)
-        // B1_mults_host_chunked[chunk] = source;
-        // std::memcpy(B1_mults_host_chunked + chunk_offset, source, chunk_size);
+        // void *B1_chunk_source = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
+        // std::memcpy(B1_mults_host_chunked + chunk_offset, B1_chunk_source, B_chunk_size);
         // printf("chunk_offset: %ld, chunk_size: %p\n", chunk_offset, chunk_size);
         // printf("2: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked + chunk);
         // printf("3: B1_mults_host_chunked + chunk_offset: %p\n", B1_mults_host_chunked + chunk_offset);
 
-        void *B1_chunk_source = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
         gpuErrchk( cudaMallocHost(&B1_mults_host_chunked[chunk], B_chunk_size) );
-        // std::memcpy(B1_mults_host_chunked[chunk], B1_chunk_source, B_chunk_size);
+        std::memcpy(B1_mults_host_chunked[chunk], B1_chunk_source, B_chunk_size);
 
         out_B1[chunk] = allocate_memory(out_size, 1);
         printf("out_B1[%d]: %p\n", chunk, out_B1[chunk].get());
