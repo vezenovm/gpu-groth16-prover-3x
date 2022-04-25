@@ -316,8 +316,8 @@ void run_prover(
 
     printf("about to allocate B2 and L\n");
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
-        gpuErrchk( cudaMallocHost(&B2_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk])) );
-        B2_mults_host_chunked[chunk] = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
+        gpuErrchk( cudaMallocHost(&B2_mults_host_chunked[chunk], get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[chunk])) );
+        B2_mults_host_chunked[chunk] = load_points_affine_host<ECpe>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
 
         gpuErrchk( cudaMallocHost(&L_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[chunk])) );
         L_mults_host_chunked[chunk] = load_points_affine_host<ECp>(((1U << C) - 1)*L_m_chunks[chunk], preprocessed_file);
