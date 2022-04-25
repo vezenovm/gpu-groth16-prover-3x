@@ -306,7 +306,7 @@ void run_prover(
         out_L[chunk] = allocate_memory(out_size, 1);
 
         cudaMallocHost(&host_B1[chunk], out_size);
-        printf("host_B1: %p\n", host_B1[i]);
+        printf("host_B1: %p\n", host_B1[chunk]);
 
         cudaMallocHost(&host_B2[chunk], out_size);
         // printf("host_B2: %p\n", host_B2[i]);
@@ -315,7 +315,7 @@ void run_prover(
     }
 
     printf("about to allocate B2 and L\n");
-    for (size_t i = 0; i < CHUNKS; i++) {
+    for (size_t chunk = 0; i < CHUNKS; i++) {
         gpuErrchk( cudaMallocHost(&B2_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk])) );
         B2_mults_host_chunked[chunk] = load_points_affine_host<ECp>(((1U << C) - 1)*B_m_chunks[chunk], preprocessed_file);
 
@@ -593,12 +593,14 @@ void run_prover(
     // cudaFreeHost(host_B1);
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
         cudaFreeHost(B1_mults_host_chunked[chunk]);
+        cudaFreeHost(B2_mults_host_chunked[chunk]);
+        cudaFreeHost(B2_mults_host_chunked[chunk]);
         cudaFreeHost(host_B1[chunk]);
         cudaFreeHost(host_B2[chunk]);
         cudaFreeHost(host_L[chunk]);
     }
-    cudaFreeHost(B2_mults_host);
-    cudaFreeHost(L_mults_host);
+    // cudaFreeHost(B2_mults_host);
+    // cudaFreeHost(L_mults_host);
     cudaFreeHost(w_host);
     cudaFreeHost(w_host2);
     cudaFreeHost(w_host3);
