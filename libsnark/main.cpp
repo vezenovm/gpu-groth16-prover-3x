@@ -334,7 +334,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
         }
         printf("finished precomputed the rest of the chunked multipels arr\n");
 
-        multiples[chunk][chunk_size].print()
+        multiples[chunk][chunk_size].print();
 
         if (multiples[chunk].size() != ((1U << C) - 1)*chunk_size) {
             fprintf(stderr, "Broken preprocessing table: got %zu, expected %zu\n",
