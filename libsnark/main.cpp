@@ -322,8 +322,10 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
     #ifdef MULTICORE
     #pragma omp parallel for
     #endif
-            for (size_t j = 0; j < chunk_size; ++j)
+            for (size_t j = 0; j < chunk_size; ++j) {
+                vec[start_index + j].print();
                 multiples[chunk][curr_row_offset + j] = vec[start_index + j] + multiples[chunk][prev_row_offset + j];
+            }
         }
         printf("finished precomputed the rest of the chunked multipels arr\n");
 
