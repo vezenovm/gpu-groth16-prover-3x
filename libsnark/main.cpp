@@ -307,7 +307,8 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
         printf("chunk size: %ld\n", chunk_size);
 
         multiples[chunk].resize(chunk_size * ((1U << C) - 1));
-        printf("multiples[%d] size: %ld\n", chunk, chunk_size * ((1U << C) - 1));
+        printf("multiples[%d] size: %ld\n", chunk, multiples[chunk].size());
+        printf("chunk: %d, size: %ld\n", chunk, chunk_size * ((1U << C) - 1));
 
         printf("start index: %ld\n", start_index);
         printf("end index: %ld\n", end_index);
