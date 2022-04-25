@@ -426,7 +426,7 @@ void run_preprocess(const char *params_path, const char *output_path)
 
     FILE *output = fopen(output_path, "w");
 
-    size_t chunk_size = params.B1.len() / chunks;
+    size_t chunk_size = params.B1.size() / chunks;
     printf("chunk size: %ld\n", chunk_size);
     // printf("Processing A...\n");
     // output_g1_multiples<ppT>(C, params.A, output);
