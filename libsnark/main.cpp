@@ -285,7 +285,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
     //     3P0, ...,    3Pn,
     //          ...,
     //  2^(C-1) P0, ..., 2^(C-1) Pn]
-    std::vector<std::vector<G1<ppT>>> multiples(num_chunks);
+    std::vector<G1<ppT>> multiples[num_chunks];
     size_t len = vec.size();
 
     int chunk_size = len / num_chunks;
@@ -313,9 +313,15 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
         printf("start index: %ld\n", start_index);
         printf("end index: %ld\n", end_index);
         // Copy chunk from vector into v
-        std::copy(vec.begin() + start_index, vec.end() + end_index, multiples[chunk].begin());
-
+        printf("value in vec.begin() + start_index: \n");
+        *(vec.begin() + start_index).print();
+        std::copy(vec.begin() + start_index, vec.begin() + end_index, multiples[chunk].begin());
         printf("copied over chunked vector into chunked multiples arr\n");
+        printf("value in multiples[chunk][0]: \n");
+        multiples[chunk][0].print();
+        printf("multiples[chunk][0] + *(vec.begin() + start_index): \n");
+        G1<ppT> x = multiples[chunk][0] + *(vec.begin() + start_index);
+        x.print();
         for (size_t i = 1; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*chunk_size;
             size_t curr_row_offset = i*chunk_size;
@@ -323,11 +329,12 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
     #pragma omp parallel for
     #endif
             for (size_t j = 0; j < chunk_size; ++j) {
-                vec[start_index + j].print();
                 multiples[chunk][curr_row_offset + j] = vec[start_index + j] + multiples[chunk][prev_row_offset + j];
             }
         }
         printf("finished precomputed the rest of the chunked multipels arr\n");
+
+        multiples[chunk][chunk_size].print()
 
         if (multiples[chunk].size() != ((1U << C) - 1)*chunk_size) {
             fprintf(stderr, "Broken preprocessing table: got %zu, expected %zu\n",
@@ -397,7 +404,7 @@ void output_g2_multiples_chunked(int C, int num_chunks, const std::vector<G2<ppT
         multiples[chunk].resize(chunk_size * ((1U << C) - 1));
 
         // Copy chunk from vector into v
-        std::copy(vec.begin() + start_index, vec.end() + end_index, multiples[chunk].begin());
+        std::copy(vec.begin() + start_index, vec.begin() + end_index, multiples[chunk].begin());
         for (size_t i = 1; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*chunk_size;
             size_t curr_row_offset = i*chunk_size;
