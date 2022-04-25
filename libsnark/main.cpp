@@ -305,12 +305,14 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
         } 
         size_t end_index = start_index + chunk_size;
         printf("chunk size: %ld\n", chunk_size);
+
+        multiples[chunk].resize(chunk_size * ((1U << C) - 1));
         printf("start index: %ld\n", start_index);
         printf("end index: %ld\n", end_index);
-        multiples[chunk].resize(chunk_size * ((1U << C) - 1));
-
         // Copy chunk from vector into v
         std::copy(vec.begin() + start_index, vec.end() + end_index, multiples[chunk].begin());
+
+        printf("copied over chunked vector into chunked multiples arr\n");
         for (size_t i = 1; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*chunk_size;
             size_t curr_row_offset = i*chunk_size;
@@ -320,6 +322,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
             for (size_t j = 0; j < chunk_size; ++j)
                 multiples[chunk][curr_row_offset + j] = vec[start_index + j] + multiples[chunk][prev_row_offset + j];
         }
+        printf("finished precomputed the rest of the chunked multipels arr\n");
 
         if (multiples[chunk].size() != ((1U << C) - 1)*chunk_size) {
             fprintf(stderr, "Broken preprocessing table: got %zu, expected %zu\n",
