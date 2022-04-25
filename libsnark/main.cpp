@@ -314,7 +314,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
         printf("end index: %ld\n", end_index);
         // Copy chunk from vector into v
         printf("value in vec.begin() + start_index: \n");
-        auto it = vec.begin() + start_index
+        std::vector<G1<ppT>>::iterator it = vec.begin() + start_index
         *it.print();
         std::copy(vec.begin() + start_index, vec.begin() + end_index, multiples[chunk].begin());
         printf("copied over chunked vector into chunked multiples arr\n");
