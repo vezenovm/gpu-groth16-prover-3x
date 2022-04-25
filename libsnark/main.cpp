@@ -315,11 +315,11 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
         // Copy chunk from vector into v
         printf("value in vec.begin() + start_index: \n");
         vec[start_index].print();
-        std::copy(vec.begin() + start_index, vec.begin() + end_index, multiples[chunk].begin());
+        std::copy(vec.begin() + start_index, vec.end() + end_index, multiples[chunk].begin());
         printf("copied over chunked vector into chunked multiples arr\n");
         printf("value in multiples[chunk][0]: \n");
         multiples[chunk][0].print();
-        printf("multiples[chunk][0] + *(vec.begin() + start_index): \n");
+        printf("multiples[chunk][0] + vec[start_index]: \n");
         G1<ppT> x = multiples[chunk][0] + vec[start_index];
         x.print();
         for (size_t i = 1; i < (1U << C) - 1; ++i) {
