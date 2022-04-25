@@ -300,6 +300,8 @@ void run_prover(
         gpuErrchk( cudaMallocHost(&B1_mults_host_chunked[chunk], B_chunk_size) );
 
         printf("3: after cudaMallocHost, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
+        printf("after cudaMallocHost, B1_mults_host_chunked[0]: %p\n", B1_mults_host_chunked[0]);
+        printf("after cudaMallocHost, B1_mults_host_chunked + 0: %p\n", B1_mults_host_chunked + 0);
 
         std::memcpy(B1_mults_host_chunked[chunk], B1_chunk_source, B_chunk_size);
 
