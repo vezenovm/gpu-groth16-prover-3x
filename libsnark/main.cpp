@@ -277,7 +277,7 @@ void output_g1_multiples(int C, const std::vector<G1<ppT>> &vec, FILE *output) {
 }
 
 template<typename ppT>
-void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT>> &vec, FILE *output) {
+void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::vector<G1<ppT>> &vec, FILE *output) {
     // If vec = [P0, ..., Pn], then multiples holds an array
     //
     // [    P0, ...,     Pn,
@@ -289,12 +289,19 @@ void output_g1_multiples_chunked(int C, int num_chunks, const std::vector<G1<ppT
     size_t len = vec.size();
 
     int chunk_size = len / num_chunks;
+    if (is_L) {
+        chunk_size++;
+    }
     printf("about to chunk the group multiples vector, len of multiples: %ld\n", len);
     // const char *c_mults = reinterpret_cast<const char *>(B1_mults_host);
     for (size_t chunk = 0; chunk < num_chunks; chunk++) {
         size_t start_index = chunk * chunk_size;
         if (chunk == num_chunks - 1) {
-            chunk_size = chunk_size + 1;
+            if (is_L) {
+                chunk_size = chunk_size - 1;
+            } else {
+                chunk_size = chunk_size + 1;
+            }
         } 
         size_t end_index = start_index + chunk_size;
         printf("chunk size: %ld\n", chunk_size);
@@ -419,17 +426,19 @@ void run_preprocess(const char *params_path, const char *output_path)
 
     FILE *output = fopen(output_path, "w");
 
+    size_t chunk_size = params.B1.len() / chunks;
+    printf("chunk size: %ld\n", chunk_size);
     // printf("Processing A...\n");
     // output_g1_multiples<ppT>(C, params.A, output);
     printf("Processing B1...\n");
     // output_g1_multiples<ppT>(C, params.B1, output);
-    output_g1_multiples_chunked<ppT>(C, chunks, params.B1, output);
+    output_g1_multiples_chunked<ppT>(C, chunks, false, params.B1, output);
     printf("Processing B2...\n");
     // output_g2_multiples<ppT>(C, params.B2, output);
     output_g2_multiples_chunked<ppT>(C, chunks, params.B2, output);
     printf("Processing L...\n");
     // output_g1_multiples<ppT>(C, params.L, output);
-    output_g1_multiples_chunked<ppT>(C, chunks, params.L, output);
+    output_g1_multiples_chunked<ppT>(C, chunks, true, params.L, output);
 //    printf("Processing H...\n");
 //    output_g1_multiples<ppT>(C, params.H, output);
 
