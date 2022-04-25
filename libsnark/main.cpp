@@ -429,7 +429,7 @@ void run_preprocess(const char *params_path, const char *output_path)
     output_g2_multiples_chunked<ppT>(C, chunks, params.B2, output);
     printf("Processing L...\n");
     // output_g1_multiples<ppT>(C, params.L, output);
-    output_g1_multiples_chunked<ppT>(C, chunks, params.B2, output);
+    output_g1_multiples_chunked<ppT>(C, chunks, params.L, output);
 //    printf("Processing H...\n");
 //    output_g1_multiples<ppT>(C, params.H, output);
 
