@@ -298,7 +298,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
         size_t start_index = chunk * chunk_size;
         if (chunk == num_chunks - 1) {
             if (is_L) {
-                chunk_size = chunk_size - 2;
+                chunk_size = chunk_size - 1;
             } else {
                 chunk_size = chunk_size + 1;
             }
@@ -317,12 +317,7 @@ void output_g1_multiples_chunked(int C, int num_chunks, bool is_L, const std::ve
 
         // Copy chunk from vector into v
         std::copy(vec.begin() + start_index, vec.begin() + end_index, multiples[chunk].begin());
-        // printf("copied over chunked vector into chunked multiples arr\n");
-        // printf("value in multiples[chunk][0]: \n");
-        // multiples[chunk][0].print();
-        // printf("multiples[chunk][0] + vec[start_index]: \n");
-        G1<ppT> x = multiples[chunk][0] + vec[start_index];
-        x.print();
+        printf("copied over chunked vector into chunked multiples arr\n");
         for (size_t i = 1; i < (1U << C) - 1; ++i) {
             size_t prev_row_offset = (i-1)*chunk_size;
             size_t curr_row_offset = i*chunk_size;
