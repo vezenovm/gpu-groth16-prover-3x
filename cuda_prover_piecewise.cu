@@ -289,7 +289,7 @@ void run_prover(
         size_t L_chunk_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[chunk]);
 
         gpuErrchk( cudaMallocHost(&B1_mults_host_chunked[chunk], B_chunk_size) );
-        gpuErrchk( cudaMallocHost(&B2_mults_host_chunked[chunk], B_chunk_size );
+        gpuErrchk( cudaMallocHost(&B2_mults_host_chunked[chunk], B_chunk_size) );
         gpuErrchk( cudaMallocHost(&L_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[chunk])) );
 
         printf("cudaMallocHost: chunk, B1_mults_host_chunked[%ld]: %p\n", chunk, B1_mults_host_chunked[chunk]);
