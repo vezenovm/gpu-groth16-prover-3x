@@ -339,7 +339,7 @@ void run_prover(
             size_t aff_bytes_offset_j = get_aff_total_bytes<ECp>(B_curr_row_offset + j);
             printf("NEW LOOP *********************************************** NEW LOOP\n");
             printf("j: %ld, j_bound: %ld, i: %ld\n", j, B_j_bound, i);
-            printf("curr_row_offset: %ld, j: %ld\n", curr_row_offset, j);
+            printf("curr_row_offset: %ld, j: %ld\n", B_curr_row_offset, j);
             printf("get_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n", aff_bytes_offset_j);
             printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i): %ld\n", get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i)));
 
