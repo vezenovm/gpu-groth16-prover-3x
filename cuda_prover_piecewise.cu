@@ -177,8 +177,6 @@ void run_prover(
     cudaFree(0);
     size_t primary_input_size = 1;
 
-    const size_t CHUNKS = 4;
-
     auto beginning = now();
     auto t = beginning;
 
@@ -239,9 +237,23 @@ void run_prover(
     size_t B1_mults_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*(m + 1));
     size_t B2_mults_size = get_aff_total_bytes<ECpe>(((1U << C) - 1)*(m + 1));
     size_t L_mults_size = get_aff_total_bytes<ECp>(((1U << C) - 1)*(m - 1));
+    size_t total_size = B1_mults_size + B2_mults_size + L_mults_size;
     printf("B1_mults_size: %ld\n", B1_mults_size);
     printf("B2_mults_size: %ld\n", B2_mults_size);
     printf("L_mults_size: %ld\n", L_mults_size);
+    printf("total size: %ld\n", total_size);
+
+    size_t *free_device;
+    size_t *total_device;
+
+    size_t CHUNKS;
+    gpuErrchk( cudaMemGetInfo(free_device, total_device) ); 
+
+    if (total_size > free) {
+
+        CHUNKS = total_size / (free - 1);
+        printf("CHUNKS: %ld\n", CHUNKS);
+    }
 
     // Previous location for where memory was declared
     // auto A_mults = load_points_affine_async<ECp>(sA, ((1U << C) - 1)*(m + 1), preprocessed_file);
@@ -454,7 +466,7 @@ void run_prover(
                 get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[i]), 
                 cudaMemcpyHostToDevice, 
                 sL) );
-                
+
         printf("B1_mults_host_chunked[i]: %p\n", B1_mults_host_chunked[i]);
         printf("i * (B_m_chunked - 1) * ELT_BYTES: %p\n", (i * (B_m_chunks[0]) * ELT_BYTES));
         printf("w_host + (i * (B_m_chunked - 1) * ELT_BYTES): %p\n", w_host + (i * (B_m_chunks[0]) * ELT_BYTES));
