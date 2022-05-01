@@ -313,8 +313,8 @@ void run_prover(
     // const char *c_mults = reinterpret_cast<const char *>(B1_mults_host);
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
         // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
-        B_m_column_offset_chunked = chunk * B_m_chunks[0];
-        L_m_column_offset_chunked = chunk * L_m_chunks[0];
+        size_t B_m_column_offset_chunked = chunk * B_m_chunks[0];
+        size_t L_m_column_offset_chunked = chunk * L_m_chunks[0];
 
         printf("(chunk * B_m_chunks[chunk]): %ld\n", (chunk * B_m_chunks[chunk]));
         printf("get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]): %ld\n", get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
@@ -338,12 +338,12 @@ void run_prover(
             size_t L_curr_row_offset = i*L_len;
 
             size_t B_chunked_row_offset = B_m_chunks[chunk] * i;
-            size_t B_j_bound = j + B_m_chunks[chunk];
+            size_t B_column_bound = B_curr_row_offset + B_m_chunks[chunk];
             // printf("(chunk * j): %ld\n", chunk * j );
             // printf("B_m_chunks[chunk]: %ld\n", B_m_chunks[chunk]);
             size_t aff_bytes_offset_j = get_aff_total_bytes<ECp>(B_curr_row_offset + j);
             printf("NEW LOOP *********************************************** NEW LOOP\n");
-            printf("j: %ld, j_bound: %ld, i: %ld\n", j, B_j_bound, i);
+            printf("B_m_column_offset_chunked: %ld, B_column_bound: %ld, i: %ld\n", column offset B, B_column_bound, i);
             printf("curr_row_offset: %ld, j: %ld\n", B_curr_row_offset, j);
             printf("get_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n", aff_bytes_offset_j);
             printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i): %ld\n", get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i)));
@@ -408,7 +408,7 @@ void run_prover(
 
         auto w1 = allocate_memory(B_m_chunks[i] * ELT_BYTES, 1);
         auto w2 = allocate_memory(B_m_chunks[i] * ELT_BYTES, 1);
-        auto w3 = allocate_memory(L_m_chunked[i] * ELT_BYTES, 1);
+        auto w3 = allocate_memory(L_m_chunks[i] * ELT_BYTES, 1);
 
         printf("w1 and w2 size: %ld\n", B_m_chunks[i] * ELT_BYTES);
         printf("w3 size: %ld\n", L_m_chunks[i] * ELT_BYTES);
@@ -495,7 +495,6 @@ void run_prover(
         ec_reduce_straus<ECp, C, R>(sB1, out_B1[i].get(), B1_mults.get(), w1.get(), B_m_chunks[i]);
         // ec_reduce<ECp>(sB1, )
         printf("out of ec reduce B1, on host\n");
-        printf("i * B1_mults_size_chunked: %ld\n", i * B1_mults_size_chunked);
         // printf("out_size_scaled: %ld\n", out_size_scaled);
 
         // gpuErrchk( cudaMemcpyAsync(B2_mults.get(), B2_mults_host + get_aff_total_bytes<ECpe>(i * B_m_chunked), get_aff_total_bytes<ECpe>(B_m_chunked), cudaMemcpyHostToDevice, sB2) );
