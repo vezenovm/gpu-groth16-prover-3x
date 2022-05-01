@@ -248,6 +248,8 @@ void run_prover(
 
     size_t CHUNKS;
     gpuErrchk( cudaMemGetInfo(free_device, total_device) ); 
+    printf("free_device: %ld\n", *free_device);
+    printf("total_device: %ld\n", *total_device);
 
     if (total_size > *free_device) {
 
