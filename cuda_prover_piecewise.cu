@@ -341,11 +341,11 @@ void run_prover(
             size_t B_column_bound = B_m_column_offset_chunked + B_m_chunks[chunk];
             // printf("(chunk * j): %ld\n", chunk * j );
             // printf("B_m_chunks[chunk]: %ld\n", B_m_chunks[chunk]);
-            size_t aff_bytes_offset_j = get_aff_total_bytes<ECp>(B_curr_row_offset + j);
+            size_t aff_bytes_row_plus_col_offset = get_aff_total_bytes<ECp>(B_curr_row_offset + B_m_column_offset_chunked);
             printf("NEW LOOP *********************************************** NEW LOOP\n");
             printf("B_m_column_offset_chunked: %ld, B_column_bound: %ld, i: %ld\n", B_m_column_offset_chunked, B_column_bound, i);
             printf("curr_row_offset: %ld, column_offset: %ld\n", B_curr_row_offset, B_m_column_offset_chunked);
-            printf("get_aff_total_bytes<ECp>(curr_row_offset + j): %ld\n", aff_bytes_offset_j);
+            printf("get_aff_total_bytes<ECp>(curr_row_offset + col_offset): %ld\n", aff_bytes_row_plus_col_offset);
             printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i): %ld\n", get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i)));
 
             // void *res = c_mults_chunked + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
