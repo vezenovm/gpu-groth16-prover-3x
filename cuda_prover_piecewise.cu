@@ -409,9 +409,13 @@ void run_prover(
     cudaStreamCreateWithFlags(&sL, cudaStreamNonBlocking);
 
     // TODO: consider utilizing shared memory for the witness
-    // auto w1 = allocate_memory(w_size, 1);
-    // auto w2 = allocate_memory(w_size, 1);
-    // auto w3 = allocate_memory(w_size, 1);
+    auto w1 = allocate_memory(B_m_chunks[CHUNKS-1] * ELT_BYTES, 1);
+    auto w2 = allocate_memory(B_m_chunks[CHUNKS-1] * ELT_BYTES, 1);
+    auto w3 = allocate_memory(L_m_chunks[0] * ELT_BYTES, 1);
+
+    auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[CHUNKS-1]), 1);
+    auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[CHUNKS-1]), 1);
+    auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[0]]), 1);
 
     // TODO: do the same thing with the offsets as the chunks amounts so that we don't have to encapsulate all the CUDA calls in big IF statements
     // Doing this will clean up a lot of the repeated statements seen below
@@ -420,16 +424,16 @@ void run_prover(
 
     for (size_t i = 0; i < CHUNKS; i++) {
 
-        auto w1 = allocate_memory(B_m_chunks[i] * ELT_BYTES, 1);
-        auto w2 = allocate_memory(B_m_chunks[i] * ELT_BYTES, 1);
-        auto w3 = allocate_memory(L_m_chunks[i] * ELT_BYTES, 1);
+        // auto w1 = allocate_memory(B_m_chunks[i] * ELT_BYTES, 1);
+        // auto w2 = allocate_memory(B_m_chunks[i] * ELT_BYTES, 1);
+        // auto w3 = allocate_memory(L_m_chunks[i] * ELT_BYTES, 1);
 
         printf("w1 and w2 size: %ld\n", B_m_chunks[i] * ELT_BYTES);
         printf("w3 size: %ld\n", L_m_chunks[i] * ELT_BYTES);
 
-        auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]), 1);
-        auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[i]), 1);
-        auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[i]), 1);
+        // auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]), 1);
+        // auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[i]), 1);
+        // auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[i]), 1);
 
         printf("B1_mults and B2_mults size: %ld\n", B_m_chunks[i] * ELT_BYTES);
         printf("L_mults size: %ld\n", L_m_chunks[i] * ELT_BYTES);
