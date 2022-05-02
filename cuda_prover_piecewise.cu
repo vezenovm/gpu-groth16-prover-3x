@@ -246,7 +246,7 @@ void run_prover(
     size_t *free_device;
     size_t *total_device;
 
-    size_t CHUNKS;
+    size_t CHUNKS = 1;
     gpuErrchk( cudaMemGetInfo(free_device, total_device) ); 
     printf("free_device: %ld\n", *free_device);
     printf("total_device: %ld\n", *total_device);
