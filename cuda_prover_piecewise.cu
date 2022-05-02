@@ -415,7 +415,7 @@ void run_prover(
 
     auto B1_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[CHUNKS-1]), 1);
     auto B2_mults = allocate_memory(get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[CHUNKS-1]), 1);
-    auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[0]]), 1);
+    auto L_mults = allocate_memory(get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[0]), 1);
 
     // TODO: do the same thing with the offsets as the chunks amounts so that we don't have to encapsulate all the CUDA calls in big IF statements
     // Doing this will clean up a lot of the repeated statements seen below
