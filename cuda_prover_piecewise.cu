@@ -328,61 +328,61 @@ void run_prover(
     // const char *c_mults = reinterpret_cast<const char *>(B1_mults_host);
     for (size_t chunk = 0; chunk < CHUNKS; chunk++) {
         // // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
-        // size_t B_m_column_offset_chunked = chunk * B_m_chunks[0];
-        // size_t L_m_column_offset_chunked = chunk * L_m_chunks[0];
+        size_t B_m_column_offset_chunked = chunk * B_m_chunks[0];
+        size_t L_m_column_offset_chunked = chunk * L_m_chunks[0];
 
-        // printf("(chunk * B_m_chunks[chunk]): %ld\n", (chunk * B_m_chunks[chunk]));
-        // printf("get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]): %ld\n", get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
+        printf("(chunk * B_m_chunks[chunk]): %ld\n", (chunk * B_m_chunks[chunk]));
+        printf("get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]): %ld\n", get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
 
-        // size_t B1_len = m+1;
-        // size_t B2_len = m+1;
-        // size_t L_len = m-1;
-        // printf("about to organize chunked multiples arrays\n");
-        // size_t G1_size = get_aff_total_bytes<ECp>(1);
-        // printf("G1_size: %ld\n", G1_size);
-        // size_t G2_size = get_aff_total_bytes<ECpe>(1);
-        // printf("G2_size: %ld\n", G2_size);
+        size_t B1_len = m+1;
+        size_t B2_len = m+1;
+        size_t L_len = m-1;
+        printf("about to organize chunked multiples arrays\n");
+        size_t G1_size = get_aff_total_bytes<ECp>(1);
+        printf("G1_size: %ld\n", G1_size);
+        size_t G2_size = get_aff_total_bytes<ECpe>(1);
+        printf("G2_size: %ld\n", G2_size);
         
-        // // const char *c_mults_chunked = reinterpret_cast<const char *>(B1_mults_host_chunked[chunk]);
+        // const char *c_mults_chunked = reinterpret_cast<const char *>(B1_mults_host_chunked[chunk]);
 
-        // printf("NEW INNER CHUNK LOOP *********************************************** NEW INNER CHUNK LOOP\n");
-        // for (size_t i = 0; i < (1U << C) - 1; ++i) {
-        //     size_t B_prev_row_offset = (i-1)*B1_len;
-        //     size_t B_curr_row_offset = i*B1_len;
-        //     size_t L_prev_row_offset = (i-1)*L_len;
-        //     size_t L_curr_row_offset = i*L_len;
+        printf("NEW INNER CHUNK LOOP *********************************************** NEW INNER CHUNK LOOP\n");
+        for (size_t i = 0; i < (1U << C) - 1; ++i) {
+            size_t B_prev_row_offset = (i-1)*B1_len;
+            size_t B_curr_row_offset = i*B1_len;
+            size_t L_prev_row_offset = (i-1)*L_len;
+            size_t L_curr_row_offset = i*L_len;
 
-        //     size_t B_chunked_row_offset = B_m_chunks[chunk] * i;
-        //     size_t B_column_bound = B_m_column_offset_chunked + B_m_chunks[chunk];
-        //     // printf("(chunk * j): %ld\n", chunk * j );
-        //     // printf("B_m_chunks[chunk]: %ld\n", B_m_chunks[chunk]);
-        //     size_t aff_bytes_row_plus_col_offset = get_aff_total_bytes<ECp>(B_curr_row_offset + B_m_column_offset_chunked);
-        //     printf("NEW LOOP *********************************************** NEW LOOP\n");
-        //     printf("B_m_column_offset_chunked: %ld, B_column_bound: %ld, i: %ld\n", B_m_column_offset_chunked, B_column_bound, i);
-        //     printf("curr_row_offset: %ld, column_offset: %ld\n", B_curr_row_offset, B_m_column_offset_chunked);
-        //     printf("get_aff_total_bytes<ECp>(curr_row_offset + col_offset): %ld\n", aff_bytes_row_plus_col_offset);
-        //     printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i): %ld\n", get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i)));
+            size_t B_chunked_row_offset = B_m_chunks[chunk] * i;
+            size_t B_column_bound = B_m_column_offset_chunked + B_m_chunks[chunk];
+            // printf("(chunk * j): %ld\n", chunk * j );
+            // printf("B_m_chunks[chunk]: %ld\n", B_m_chunks[chunk]);
+            size_t aff_bytes_row_plus_col_offset = get_aff_total_bytes<ECp>(B_curr_row_offset + B_m_column_offset_chunked);
+            printf("NEW LOOP *********************************************** NEW LOOP\n");
+            printf("B_m_column_offset_chunked: %ld, B_column_bound: %ld, i: %ld\n", B_m_column_offset_chunked, B_column_bound, i);
+            printf("curr_row_offset: %ld, column_offset: %ld\n", B_curr_row_offset, B_m_column_offset_chunked);
+            printf("get_aff_total_bytes<ECp>(curr_row_offset + col_offset): %ld\n", aff_bytes_row_plus_col_offset);
+            printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i): %ld\n", get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i)));
 
-        //     // void *res = c_mults_chunked + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
-        //     // void *source = c_mults + get_aff_total_bytes<ECp>(curr_row_offset + j);
-        //     char *res_B1_mults = ((char *)B1_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
-        //     const char *source_B1_mults = ((const char *)B1_mults_host) + get_aff_total_bytes<ECp>(B_curr_row_offset + B_m_column_offset_chunked);
+            // void *res = c_mults_chunked + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
+            // void *source = c_mults + get_aff_total_bytes<ECp>(curr_row_offset + j);
+            char *res_B1_mults = ((char *)B1_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
+            const char *source_B1_mults = ((const char *)B1_mults_host) + get_aff_total_bytes<ECp>(B_curr_row_offset + B_m_column_offset_chunked);
 
-        //     // char *c_mults_chunked = reinterpret_cast<char *>(res);
-        //     // const char *c_mults = reinterpret_cast<const char *>(source);
+            // char *c_mults_chunked = reinterpret_cast<char *>(res);
+            // const char *c_mults = reinterpret_cast<const char *>(source);
 
-        //     std::memcpy(res_B1_mults, source_B1_mults, get_aff_total_bytes<ECp>(B_m_chunks[chunk]));
-        //     // gpuErrchk( cudaMemcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]), cudaMemcpyHostToHost) );
+            std::memcpy(res_B1_mults, source_B1_mults, get_aff_total_bytes<ECp>(B_m_chunks[chunk]));
+            // gpuErrchk( cudaMemcpy(res, source, get_aff_total_bytes<ECp>(B_m_chunks[chunk]), cudaMemcpyHostToHost) );
 
-        //     char *res_B2_mults = ((char *)B2_mults_host_chunked[chunk]) + get_aff_total_bytes<ECpe>(B_m_chunks[chunk] * i);
-        //     const char *source_B2_mults = ((const char *)B2_mults_host) + get_aff_total_bytes<ECpe>(B_curr_row_offset + B_m_column_offset_chunked);
-        //     std::memcpy(res_B2_mults, source_B2_mults, get_aff_total_bytes<ECpe>(B_m_chunks[chunk]));
+            char *res_B2_mults = ((char *)B2_mults_host_chunked[chunk]) + get_aff_total_bytes<ECpe>(B_m_chunks[chunk] * i);
+            const char *source_B2_mults = ((const char *)B2_mults_host) + get_aff_total_bytes<ECpe>(B_curr_row_offset + B_m_column_offset_chunked);
+            std::memcpy(res_B2_mults, source_B2_mults, get_aff_total_bytes<ECpe>(B_m_chunks[chunk]));
 
 
-        //     char *res_L_mults = ((char *)L_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>(L_m_chunks[chunk] * i);
-        //     const char *source_L_mults = ((const char *)L_mults_host) + get_aff_total_bytes<ECp>(L_curr_row_offset + L_m_column_offset_chunked);
-        //     std::memcpy(res_L_mults, source_L_mults, get_aff_total_bytes<ECp>(L_m_chunks[chunk]));
-        // }
+            char *res_L_mults = ((char *)L_mults_host_chunked[chunk]) + get_aff_total_bytes<ECp>(L_m_chunks[chunk] * i);
+            const char *source_L_mults = ((const char *)L_mults_host) + get_aff_total_bytes<ECp>(L_curr_row_offset + L_m_column_offset_chunked);
+            std::memcpy(res_L_mults, source_L_mults, get_aff_total_bytes<ECp>(L_m_chunks[chunk]));
+        }
         printf("done chunking multiples arrays\n");
 
         out_B1[chunk] = allocate_memory(out_size, 1);
@@ -425,48 +425,48 @@ void run_prover(
 
     for (size_t i = 0; i < CHUNKS; i++) {
         // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
-        size_t B_m_column_offset_chunked = i * B_m_chunks[0];
-        size_t L_m_column_offset_chunked = i * L_m_chunks[0];
+        // size_t B_m_column_offset_chunked = i * B_m_chunks[0];
+        // size_t L_m_column_offset_chunked = i * L_m_chunks[0];
 
-        printf("(chunk * B_m_chunks[chunk]): %ld\n", (i * B_m_chunks[i]));
-        printf("get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]): %ld\n", get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]));
+        // printf("(chunk * B_m_chunks[chunk]): %ld\n", (i * B_m_chunks[i]));
+        // printf("get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]): %ld\n", get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]));
 
-        size_t B1_len = m+1;
-        size_t B2_len = m+1;
-        size_t L_len = m-1;
-        printf("about to organize chunked multiples arrays\n");
-        size_t G1_size = get_aff_total_bytes<ECp>(1);
-        printf("G1_size: %ld\n", G1_size);
-        size_t G2_size = get_aff_total_bytes<ECpe>(1);
-        printf("G2_size: %ld\n", G2_size);
+        // size_t B1_len = m+1;
+        // size_t B2_len = m+1;
+        // size_t L_len = m-1;
+        // printf("about to organize chunked multiples arrays\n");
+        // size_t G1_size = get_aff_total_bytes<ECp>(1);
+        // printf("G1_size: %ld\n", G1_size);
+        // size_t G2_size = get_aff_total_bytes<ECpe>(1);
+        // printf("G2_size: %ld\n", G2_size);
         
-        // const char *c_mults_chunked = reinterpret_cast<const char *>(B1_mults_host_chunked[chunk]);
-        cudaMallocHost((void **)&B1_mults_host_chunked[i], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]));
-        cudaMallocHost((void **)&B2_mults_host_chunked[i], get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[i]));
-        cudaMallocHost((void **)&L_mults_host_chunked[i], get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[i]));
+        // // const char *c_mults_chunked = reinterpret_cast<const char *>(B1_mults_host_chunked[chunk]);
+        // cudaMallocHost((void **)&B1_mults_host_chunked[i], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[i]));
+        // cudaMallocHost((void **)&B2_mults_host_chunked[i], get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[i]));
+        // cudaMallocHost((void **)&L_mults_host_chunked[i], get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[i]));
 
-        for (size_t j = 0; j < (1U << C) - 1; ++j) {
-            size_t B_prev_row_offset = (j-1)*B1_len;
-            size_t B_curr_row_offset = j*B1_len;
-            size_t L_prev_row_offset = (j-1)*L_len;
-            size_t L_curr_row_offset = j*L_len;
+        // for (size_t j = 0; j < (1U << C) - 1; ++j) {
+        //     size_t B_prev_row_offset = (j-1)*B1_len;
+        //     size_t B_curr_row_offset = j*B1_len;
+        //     size_t L_prev_row_offset = (j-1)*L_len;
+        //     size_t L_curr_row_offset = j*L_len;
 
-            size_t B_chunked_row_offset = B_m_chunks[i] * j;
-            size_t B_column_bound = B_m_column_offset_chunked + B_m_chunks[i];
-            size_t aff_bytes_row_plus_col_offset = get_aff_total_bytes<ECp>(B_curr_row_offset + B_m_column_offset_chunked);
+        //     size_t B_chunked_row_offset = B_m_chunks[i] * j;
+        //     size_t B_column_bound = B_m_column_offset_chunked + B_m_chunks[i];
+        //     size_t aff_bytes_row_plus_col_offset = get_aff_total_bytes<ECp>(B_curr_row_offset + B_m_column_offset_chunked);
 
-            char *res_B1_mults = ((char *)B1_mults_host_chunked[i]) + get_aff_total_bytes<ECp>(B_m_chunks[i] * j);
-            const char *source_B1_mults = ((const char *)B1_mults_host) + get_aff_total_bytes<ECp>(B_curr_row_offset + B_m_column_offset_chunked);
-            std::memcpy(res_B1_mults, source_B1_mults, get_aff_total_bytes<ECp>(B_m_chunks[i]));
+        //     char *res_B1_mults = ((char *)B1_mults_host_chunked[i]) + get_aff_total_bytes<ECp>(B_m_chunks[i] * j);
+        //     const char *source_B1_mults = ((const char *)B1_mults_host) + get_aff_total_bytes<ECp>(B_curr_row_offset + B_m_column_offset_chunked);
+        //     std::memcpy(res_B1_mults, source_B1_mults, get_aff_total_bytes<ECp>(B_m_chunks[i]));
 
-            char *res_B2_mults = ((char *)B2_mults_host_chunked[i]) + get_aff_total_bytes<ECpe>(B_m_chunks[i] * j);
-            const char *source_B2_mults = ((const char *)B2_mults_host) + get_aff_total_bytes<ECpe>(B_curr_row_offset + B_m_column_offset_chunked);
-            std::memcpy(res_B2_mults, source_B2_mults, get_aff_total_bytes<ECpe>(B_m_chunks[i]));
+        //     char *res_B2_mults = ((char *)B2_mults_host_chunked[i]) + get_aff_total_bytes<ECpe>(B_m_chunks[i] * j);
+        //     const char *source_B2_mults = ((const char *)B2_mults_host) + get_aff_total_bytes<ECpe>(B_curr_row_offset + B_m_column_offset_chunked);
+        //     std::memcpy(res_B2_mults, source_B2_mults, get_aff_total_bytes<ECpe>(B_m_chunks[i]));
 
-            char *res_L_mults = ((char *)L_mults_host_chunked[i]) + get_aff_total_bytes<ECp>(L_m_chunks[i] * j);
-            const char *source_L_mults = ((const char *)L_mults_host) + get_aff_total_bytes<ECp>(L_curr_row_offset + L_m_column_offset_chunked);
-            std::memcpy(res_L_mults, source_L_mults, get_aff_total_bytes<ECp>(L_m_chunks[i]));
-        }
+        //     char *res_L_mults = ((char *)L_mults_host_chunked[i]) + get_aff_total_bytes<ECp>(L_m_chunks[i] * j);
+        //     const char *source_L_mults = ((const char *)L_mults_host) + get_aff_total_bytes<ECp>(L_curr_row_offset + L_m_column_offset_chunked);
+        //     std::memcpy(res_L_mults, source_L_mults, get_aff_total_bytes<ECp>(L_m_chunks[i]));
+        // }
 
         printf("w1 and w2 size: %ld\n", B_m_chunks[i] * ELT_BYTES);
         printf("w3 size: %ld\n", L_m_chunks[i] * ELT_BYTES);
@@ -542,9 +542,9 @@ void run_prover(
         gpuErrchk( cudaMemcpyAsync(host_L[i], out_L[i].get(), out_size, cudaMemcpyDeviceToHost, sL) );
         printf("initiated L copy to host\n");
 
-        cudaFreeHost(B1_mults_host_chunked[i]);
-        cudaFreeHost(B2_mults_host_chunked[i]);
-        cudaFreeHost(L_mults_host_chunked[i]);
+        // cudaFreeHost(B1_mults_host_chunked[i]);
+        // cudaFreeHost(B2_mults_host_chunked[i]);
+        // cudaFreeHost(L_mults_host_chunked[i]);
     }
 
     print_time(t, "gpu launch");
@@ -645,6 +645,11 @@ void run_prover(
     cudaFreeHost(B1_mults_host);
     cudaFreeHost(B2_mults_host);
     cudaFreeHost(L_mults_host);
+    for (size_t i = 0; i < CHUNKS; i++) {
+        cudaFreeHost(B1_mults_host_chunked[i]);
+        cudaFreeHost(B2_mults_host_chunked[i]);
+        cudaFreeHost(L_mults_host_chunked[i]);
+    }
     cudaFreeHost(w_host);
     cudaFreeHost(w_host2);
     cudaFreeHost(w_host3);
