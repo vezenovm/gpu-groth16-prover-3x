@@ -243,19 +243,19 @@ void run_prover(
     printf("L_mults_size: %ld\n", L_mults_size);
     printf("total size: %ld\n", total_size);
 
-    size_t *free_device;
-    size_t *total_device;
+    size_t free_device;
+    size_t total_device;
 
     size_t CHUNKS = 1;
-    gpuErrchk( cudaMemGetInfo(free_device, total_device) ); 
-    printf("free_device: %ld\n", *free_device);
-    printf("total_device: %ld\n", *total_device);
+    gpuErrchk( cudaMemGetInfo(&free_device, &total_device) ); 
+    printf("free_device: %ld\n", free_device);
+    printf("total_device: %ld\n", total_device);
 
-    if (total_size > *free_device) {
+    if (total_size > free_device) {
 
-        CHUNKS = total_size / (*free_device - 1);
-        printf("CHUNKS: %ld\n", CHUNKS);
+        CHUNKS = total_size / free_device + 1;
     }
+    printf("CHUNKS: %ld\n", CHUNKS);
 
     // Previous location for where memory was declared
     // auto A_mults = load_points_affine_async<ECp>(sA, ((1U << C) - 1)*(m + 1), preprocessed_file);
