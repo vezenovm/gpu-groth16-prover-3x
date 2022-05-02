@@ -319,9 +319,9 @@ void run_prover(
         }
 
         // Moved to main chunk loop
-        // cudaMallocHost((void **)&B1_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
-        // cudaMallocHost((void **)&B2_mults_host_chunked[chunk], get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[chunk]));
-        // cudaMallocHost((void **)&L_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[chunk]));
+        cudaMallocHost((void **)&B1_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
+        cudaMallocHost((void **)&B2_mults_host_chunked[chunk], get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[chunk]));
+        cudaMallocHost((void **)&L_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[chunk]));
 
     }
     printf("about to allocate out ptrs\n");
