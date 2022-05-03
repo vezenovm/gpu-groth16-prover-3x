@@ -165,7 +165,7 @@ get_aff_total_bytes(size_t n) {
 
 template<typename B>
 void
-evaluate_A_and_H(B::G1 &eval_A, B::G1 &eval_H, B::groth16_params params, B::groth16_input inputs, size_t d, size_t m) {
+evaluate_A_and_H(auto &eval_A, auto &eval_H, auto params, auto inputs, size_t d, size_t m) {
     eval_A = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
 
     // Do calculations relating to H on CPU after having set the GPU in
@@ -445,6 +445,12 @@ void run_prover(
     
     G1 *evaluation_At;
     G1 *evaluation_Ht;
+
+    // auto f = [](int x) {
+    //     for (int i = 0; i < x; i++)
+    //         cout << "Thread using lambda"
+    //          " expression as callable\n";
+    // };
     std::thread h_eval_thread(evaluate_A_and_H<B>, evaluation_At, evaluation_Ht, params, inputs, d, m);
 
     for (size_t i = 0; i < CHUNKS; i++) {
