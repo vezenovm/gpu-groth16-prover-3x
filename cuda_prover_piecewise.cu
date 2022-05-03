@@ -445,7 +445,7 @@ void run_prover(
     
     G1 *evaluation_At;
     G1 *evaluation_Ht;
-    std::thread h_eval_thread(evaluate_A_and_H, evaluation_At, evaluation_At, params, d, m);
+    std::thread h_eval_thread(evaluate_A_and_H<B, G1>, evaluation_At, evaluation_At, params, d, m);
 
     for (size_t i = 0; i < CHUNKS; i++) {
         // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
