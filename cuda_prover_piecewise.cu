@@ -449,7 +449,7 @@ void run_prover(
     G1 *evaluation_At;
     G1 *evaluation_Ht;
 
-    auto f = [](G1 &eval_A, G1 &eval_H, groth16_params params, groth16_input inputs, size_t d, size_t m) {
+    auto f = []<typename B>(G1 &eval_A, G1 &eval_H, groth16_params params, groth16_input inputs, size_t d, size_t m) {
         eval_A = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
 
         // Do calculations relating to H on CPU after having set the GPU in
@@ -460,7 +460,7 @@ void run_prover(
 
         eval_H = B::multiexp_G1(coefficients_for_H, H, d);
     };
-    std::thread h_eval_thread(f, evaluation_At, evaluation_Ht, params, inputs, d, m);
+    std::thread h_eval_thread(f<B>, evaluation_At, evaluation_Ht, params, inputs, d, m);
 
     for (size_t i = 0; i < CHUNKS; i++) {
         // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
