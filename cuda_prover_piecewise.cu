@@ -423,6 +423,13 @@ void run_prover(
     // size_t w_offset_B_m = 
     printf("ELT_BYTES: %ld\n", ELT_BYTES);
 
+    cudaEvent_t event_B1;
+    gpuErrchk( cudaEventCreate(&event_B1) );
+    cudaEvent_t event_B2;
+    gpuErrchk( cudaEventCreate(&event_B2) );
+    cudaEvent_t event_L;
+    gpuErrchk( cudaEventCreate(&event_L) );
+
     for (size_t i = 0; i < CHUNKS; i++) {
         // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
         // size_t B_m_column_offset_chunked = i * B_m_chunks[0];
@@ -483,6 +490,7 @@ void run_prover(
         printf("w_host + i * (B_m_chunked) * ELT_BYTES: %p\n", w_host + (i * (B_m_chunks[i]) * ELT_BYTES));
         printf("B_m_chunked * ELT_BYTES: %ld\n", B_m_chunks[i] * ELT_BYTES);
         // cudaDeviceSynchronize();
+        cudaStreamWaitEvent ( sB1, event_B1 );
         gpuErrchk( 
             cudaMemcpyAsync(B1_mults.get(), 
             B1_mults_host_chunked[i], 
@@ -491,14 +499,16 @@ void run_prover(
             sB1) );
 
         printf("B1_mults.get(): %p\n", B1_mults.get());
-
+        
+        cudaStreamWaitEvent ( sB2, event_B2 );
         gpuErrchk( 
             cudaMemcpyAsync(B2_mults.get(), 
             B2_mults_host_chunked[i], 
             get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[i]), 
             cudaMemcpyHostToDevice, 
             sB2) );
-
+        
+        cudaStreamWaitEvent ( sL, event_L );
         gpuErrchk( 
             cudaMemcpyAsync(L_mults.get(), 
                 L_mults_host_chunked[i], 
@@ -535,12 +545,15 @@ void run_prover(
         printf("i: %ld, out_B1[%d].get(): %p\n", i, out_B1[i].get()); 
         gpuErrchk( cudaMemcpyAsync(host_B1[i], out_B1[i].get(), out_size, cudaMemcpyDeviceToHost, sB1) );
         printf("initiated B1 copy to host\n");
+        gpuErrchk( cudaEventRecord(event_B1, sB1) ); // record event
 
         gpuErrchk( cudaMemcpyAsync(host_B2[i], out_B2[i].get(), out_size, cudaMemcpyDeviceToHost, sB2) );
         printf("initiated B2 copy to host\n");
+        gpuErrchk( cudaEventRecord(event_B2, sB2) ); 
 
         gpuErrchk( cudaMemcpyAsync(host_L[i], out_L[i].get(), out_size, cudaMemcpyDeviceToHost, sL) );
         printf("initiated L copy to host\n");
+        gpuErrchk( cudaEventRecord(event_L, sL) ); 
 
         // cudaFreeHost(B1_mults_host_chunked[i]);
         // cudaFreeHost(B2_mults_host_chunked[i]);
