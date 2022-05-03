@@ -423,13 +423,16 @@ void run_prover(
     // size_t w_offset_B_m = 
     printf("ELT_BYTES: %ld\n", ELT_BYTES);
 
-    cudaEvent_t event_B1;
-    gpuErrchk( cudaEventCreate(&event_B1) );
-    cudaEvent_t event_B2;
-    gpuErrchk( cudaEventCreate(&event_B2) );
-    cudaEvent_t event_L;
-    gpuErrchk( cudaEventCreate(&event_L) );
+    // TODO: look into using events
+    // cudaEvent_t event_B1;
+    // gpuErrchk( cudaEventCreate(&event_B1) );
+    // cudaEvent_t event_B2;
+    // gpuErrchk( cudaEventCreate(&event_B2) );
+    // cudaEvent_t event_L;
+    // gpuErrchk( cudaEventCreate(&event_L) );
 
+    G1 *evaluation_At;
+    G1 *evaluation_Ht;
     for (size_t i = 0; i < CHUNKS; i++) {
         // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
         // size_t B_m_column_offset_chunked = i * B_m_chunks[0];
@@ -558,21 +561,33 @@ void run_prover(
         // cudaFreeHost(B1_mults_host_chunked[i]);
         // cudaFreeHost(B2_mults_host_chunked[i]);
         // cudaFreeHost(L_mults_host_chunked[i]);
+        print_time(t, "gpu first chunk launch");
+
+        if (i == 0) {
+            evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
+            auto H = B::params_H(params);
+            auto coefficients_for_H =
+                compute_H<B>(d, B::input_ca(inputs), B::input_cb(inputs), B::input_cc(inputs));
+            
+            evaluation_Ht = B::multiexp_G1(coefficients_for_H, H, d);
+
+            print_time(t, "cpu 1");
+        }
     }
 
-    print_time(t, "gpu launch");
+    print_time(t, "gpu total launch");
 
-    G1 *evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
+    // G1 *evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
 
-    // Do calculations relating to H on CPU after having set the GPU in
-    // motion
-    auto H = B::params_H(params);
-    auto coefficients_for_H =
-        compute_H<B>(d, B::input_ca(inputs), B::input_cb(inputs), B::input_cc(inputs));
+    // // Do calculations relating to H on CPU after having set the GPU in
+    // // motion
+    // auto H = B::params_H(params);
+    // auto coefficients_for_H =
+    //     compute_H<B>(d, B::input_ca(inputs), B::input_cb(inputs), B::input_cc(inputs));
 
-    G1 *evaluation_Ht = B::multiexp_G1(coefficients_for_H, H, d);
+    // G1 *evaluation_Ht = B::multiexp_G1(coefficients_for_H, H, d);
 
-    print_time(t, "cpu 1");
+    // print_time(t, "cpu 1");
 
     // cudaDeviceSynchronize();
     //cudaStreamSynchronize(sA);
