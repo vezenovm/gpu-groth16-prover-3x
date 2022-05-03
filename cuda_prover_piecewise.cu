@@ -205,6 +205,9 @@ void run_prover(
     typedef typename B::G1 G1;
     typedef typename B::G2 G2;
 
+    typedef typename B::groth16_params groth16_params;
+    typedef typename B::groth16_input groth16_input;
+
     static constexpr int R = 32;
     static constexpr int C = 5;
     
@@ -446,7 +449,7 @@ void run_prover(
     G1 *evaluation_At;
     G1 *evaluation_Ht;
 
-    auto f = [](B::G1 &eval_A, B::G1 &eval_H, B::groth16_params params, B::groth16_input inputs, size_t d, size_t m) {
+    auto f = [](G1 &eval_A, G1 &eval_H, groth16_params params, groth16_input inputs, size_t d, size_t m) {
         eval_A = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
 
         // Do calculations relating to H on CPU after having set the GPU in
