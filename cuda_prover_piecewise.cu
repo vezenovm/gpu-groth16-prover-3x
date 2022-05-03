@@ -357,11 +357,11 @@ void run_prover(
             // printf("(chunk * j): %ld\n", chunk * j );
             // printf("B_m_chunks[chunk]: %ld\n", B_m_chunks[chunk]);
             size_t aff_bytes_row_plus_col_offset = get_aff_total_bytes<ECp>(B_curr_row_offset + B_m_column_offset_chunked);
-            printf("NEW LOOP *********************************************** NEW LOOP\n");
-            printf("B_m_column_offset_chunked: %ld, B_column_bound: %ld, i: %ld\n", B_m_column_offset_chunked, B_column_bound, i);
-            printf("curr_row_offset: %ld, column_offset: %ld\n", B_curr_row_offset, B_m_column_offset_chunked);
+            // printf("NEW LOOP *********************************************** NEW LOOP\n");
+            // printf("B_m_column_offset_chunked: %ld, B_column_bound: %ld, i: %ld\n", B_m_column_offset_chunked, B_column_bound, i);
+            // printf("curr_row_offset: %ld, column_offset: %ld\n", B_curr_row_offset, B_m_column_offset_chunked);
             printf("get_aff_total_bytes<ECp>(curr_row_offset + col_offset): %ld\n", aff_bytes_row_plus_col_offset);
-            printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i): %ld\n", get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i)));
+            // printf("get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i): %ld\n", get_aff_total_bytes<ECp>((B_m_chunks[chunk] * i)));
 
             // void *res = c_mults_chunked + get_aff_total_bytes<ECp>(B_m_chunks[chunk] * i);
             // void *source = c_mults + get_aff_total_bytes<ECp>(curr_row_offset + j);
@@ -433,6 +433,8 @@ void run_prover(
 
     G1 *evaluation_At;
     G1 *evaluation_Ht;
+    B::groth16_params H;
+    B::vector_Fr coefficients_for_H;
     for (size_t i = 0; i < CHUNKS; i++) {
         // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
         // size_t B_m_column_offset_chunked = i * B_m_chunks[0];
@@ -565,8 +567,8 @@ void run_prover(
 
         if (i == 0) {
             evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
-            auto H = B::params_H(params);
-            auto coefficients_for_H =
+            H = B::params_H(params);
+            coefficients_for_H =
                 compute_H<B>(d, B::input_ca(inputs), B::input_cb(inputs), B::input_cc(inputs));
             
             evaluation_Ht = B::multiexp_G1(coefficients_for_H, H, d);
