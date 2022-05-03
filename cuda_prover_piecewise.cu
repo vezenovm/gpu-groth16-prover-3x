@@ -589,8 +589,9 @@ void run_prover(
         B1_evaluations[i] = B::read_pt_ECp(host_B1[i]);
         B::print_G1(B1_evaluations[i]);
     }
+    print_time(t, "gpu synch B1");
 
-    auto binary_op = [](G1 *p1, G1 *p2){return B::G1_add(p1, p2); };
+    auto binary_op = [](G1 *p1, G1 *p2){return B::G1_add(p2, p1); };
     G1 *final_B1_host = std::accumulate(B1_evaluations.begin() + 1, B1_evaluations.end(), B1_evaluations[0], binary_op);
     printf("final_B1_host:\n");
     B::print_G1(final_B1_host);
@@ -603,6 +604,7 @@ void run_prover(
     for (size_t i = 0; i < CHUNKS; i++) {
         B2_evaluations[i] = B::read_pt_ECpe(host_B2[i]);
     }
+    print_time(t, "gpu synch B2");
 
     cudaStreamSynchronize(sL);
     printf("synchronized sL\n");
@@ -613,7 +615,7 @@ void run_prover(
         L_evaluations[i] = B::read_pt_ECp(host_L[i]);
     }
 
-    print_time(t, "gpu synch");
+    print_time(t, "gpu synch L");
     
     G1 *evaluation_Bt1_sum = B1_evaluations[0];
     G2 *evaluation_Bt2 = B2_evaluations[0];
