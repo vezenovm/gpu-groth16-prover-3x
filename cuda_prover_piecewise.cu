@@ -449,18 +449,19 @@ void run_prover(
     G1 *evaluation_At;
     G1 *evaluation_Ht;
 
-    // auto f = []G1 &eval_A, G1 &eval_H, groth16_params params, groth16_input inputs, size_t d, size_t m) {
-    //     eval_A = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
+    #pragma omp task
+    {
+        evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
 
-    //     // Do calculations relating to H on CPU after having set the GPU in
-    //     // motion
-    //     auto H = B::params_H(params);
-    //     auto coefficients_for_H =
-    //         compute_H<B>(d, B::input_ca(inputs), B::input_cb(inputs), B::input_cc(inputs));
+        // Do calculations relating to H on CPU after having set the GPU in
+        // motion
+        auto H = B::params_H(params);
+        auto coefficients_for_H =
+            compute_H<B>(d, B::input_ca(inputs), B::input_cb(inputs), B::input_cc(inputs));
 
-    //     eval_H = B::multiexp_G1(coefficients_for_H, H, d);
-    // };
-    std::thread h_eval_thread(evaluate_A_and_H<B>, evaluation_At, evaluation_Ht, params, inputs, d, m);
+        evaluation_Ht = B::multiexp_G1(coefficients_for_H, H, d);
+    };
+    // std::thread h_eval_thread(evaluate_A_and_H<B>, evaluation_At, evaluation_Ht, params, inputs, d, m);
 
     for (size_t i = 0; i < CHUNKS; i++) {
         // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
@@ -666,8 +667,8 @@ void run_prover(
     G1 *evaluation_Bt1 = evaluation_Bt1_sum;
 
     print_time(t_gpu, "gpu e2e");
-    h_eval_thread.join();
-
+    // h_eval_thread.join();
+    #pragma omp taskwait
     print_time(t, "joined cpu thread");
 
     auto scaled_Bt1 = B::G1_scale(B::input_r(inputs), evaluation_Bt1);
