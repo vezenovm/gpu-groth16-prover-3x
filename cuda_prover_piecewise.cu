@@ -253,7 +253,7 @@ void run_prover(
 
     if (total_size > free_device) {
 
-        CHUNKS = (total_size * 2) / free_device + 1;
+        CHUNKS = (total_size * 1.5) / free_device + 1;
     }
     printf("CHUNKS: %ld\n", CHUNKS);
 
