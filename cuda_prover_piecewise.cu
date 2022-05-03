@@ -448,7 +448,7 @@ void run_prover(
     
     G1 *evaluation_At;
     G1 *evaluation_Ht;
-
+    omp_set_num_threads( 2 );   
     #pragma omp task
     {
         evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
