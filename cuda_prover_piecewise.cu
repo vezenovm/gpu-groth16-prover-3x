@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <numeric>
 #include <vector>
+#include <thread>
 
 #define NDEBUG 1
 
@@ -110,8 +111,7 @@ print_time(T &t1, const char *str) {
 }
 
 void *
-load_scalars_async_host(size_t n, FILE *inputs)
-{
+load_scalars_async_host(size_t n, FILE *inputs) {
     static constexpr size_t scalar_bytes = ELT_BYTES;
     size_t total_bytes = n * scalar_bytes;
     printf("total scalar bytes host alloc: %zu\n", total_bytes);
@@ -129,8 +129,7 @@ load_scalars_async_host(size_t n, FILE *inputs)
 
 template< typename EC >
 void *
-load_points_affine_host(size_t n, FILE *inputs)
-{
+load_points_affine_host(size_t n, FILE *inputs) {
     typedef typename EC::field_type FF;
 
     static constexpr size_t coord_bytes = FF::DEGREE * ELT_BYTES;
@@ -154,8 +153,7 @@ load_points_affine_host(size_t n, FILE *inputs)
 
 template<typename EC>
 size_t
-get_aff_total_bytes(size_t n) 
-{
+get_aff_total_bytes(size_t n) {
     typedef typename EC::field_type FF;
 
     static constexpr size_t coord_bytes = FF::DEGREE * ELT_BYTES;
@@ -163,6 +161,20 @@ get_aff_total_bytes(size_t n)
     size_t total_aff_bytes = n * aff_pt_bytes;
     // printf("total affine bytes for %ld points: %zu\n", n, total_aff_bytes);
     return total_aff_bytes;
+}
+
+template<typename B, typename G1>
+void
+evaluate_A_and_H(G1 &eval_A, G1 &eval_H, B::groth16_params params, d, m) {
+    eval_A = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
+
+    // Do calculations relating to H on CPU after having set the GPU in
+    // motion
+    auto H = B::params_H(params);
+    auto coefficients_for_H =
+        compute_H<B>(d, B::input_ca(inputs), B::input_cb(inputs), B::input_cc(inputs));
+
+    eval_H = B::multiexp_G1(coefficients_for_H, H, d);
 }
 
 template <typename B>
@@ -430,9 +442,11 @@ void run_prover(
     // gpuErrchk( cudaEventCreate(&event_B2) );
     // cudaEvent_t event_L;
     // gpuErrchk( cudaEventCreate(&event_L) );
-
+    
     G1 *evaluation_At;
     G1 *evaluation_Ht;
+    std::thread h_eval_thread(evaluate_A_and_H, evaluation_At, evaluation_At, params, d, m);
+
     for (size_t i = 0; i < CHUNKS; i++) {
         // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
         // size_t B_m_column_offset_chunked = i * B_m_chunks[0];
@@ -561,22 +575,6 @@ void run_prover(
         // cudaFreeHost(B1_mults_host_chunked[i]);
         // cudaFreeHost(B2_mults_host_chunked[i]);
         // cudaFreeHost(L_mults_host_chunked[i]);
-        print_time(t, "gpu first chunk launch");
-
-        if (i == 0) {
-            evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
-            auto H = B::params_H(params);
-            auto coefficients_for_H =
-                compute_H<B>(d, B::input_ca(inputs), B::input_cb(inputs), B::input_cc(inputs));
-            
-            evaluation_Ht = B::multiexp_G1(coefficients_for_H, H, d);
-
-            print_time(t, "cpu 1");
-
-
-            B::delete_vector_G1(H);
-            B::delete_vector_Fr(coefficients_for_H);
-        }
     }
 
     print_time(t, "gpu total launch");
@@ -593,7 +591,6 @@ void run_prover(
 
     // print_time(t, "cpu 1");
 
-    // cudaDeviceSynchronize();
     //cudaStreamSynchronize(sA);
     //G1 *evaluation_At = B::read_pt_ECp(out_A.get());
 
@@ -654,6 +651,9 @@ void run_prover(
     G1 *evaluation_Bt1 = evaluation_Bt1_sum;
 
     print_time(t_gpu, "gpu e2e");
+    h_eval_thread.join();
+
+    print_time(t, "joined cpu thread");
 
     auto scaled_Bt1 = B::G1_scale(B::input_r(inputs), evaluation_Bt1);
     auto Lt1_plus_scaled_Bt1 = B::G1_add(evaluation_Lt, scaled_Bt1);
