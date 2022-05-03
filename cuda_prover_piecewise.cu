@@ -433,8 +433,6 @@ void run_prover(
 
     G1 *evaluation_At;
     G1 *evaluation_Ht;
-    B::groth16_params H;
-    B::vector_Fr coefficients_for_H;
     for (size_t i = 0; i < CHUNKS; i++) {
         // We must offset by our common slice amount, as any remaining multiples are processed in final chunk
         // size_t B_m_column_offset_chunked = i * B_m_chunks[0];
@@ -567,13 +565,17 @@ void run_prover(
 
         if (i == 0) {
             evaluation_At = B::multiexp_G1(B::input_w(inputs), B::params_A(params), m + 1);
-            H = B::params_H(params);
-            coefficients_for_H =
+            auto H = B::params_H(params);
+            auto coefficients_for_H =
                 compute_H<B>(d, B::input_ca(inputs), B::input_cb(inputs), B::input_cc(inputs));
             
             evaluation_Ht = B::multiexp_G1(coefficients_for_H, H, d);
 
             print_time(t, "cpu 1");
+
+
+            B::delete_vector_G1(H);
+            B::delete_vector_Fr(coefficients_for_H);
         }
     }
 
@@ -690,7 +692,7 @@ void run_prover(
     cudaFreeHost(host_B2);
     cudaFreeHost(host_L);
 
-    B::delete_vector_G1(H);
+    // B::delete_vector_G1(H);
 
     B::delete_G1(evaluation_At);
     B::delete_G1(evaluation_Bt1);
@@ -699,7 +701,7 @@ void run_prover(
     B::delete_G1(evaluation_Lt);
     B::delete_G1(scaled_Bt1);
     B::delete_G1(Lt1_plus_scaled_Bt1);
-    B::delete_vector_Fr(coefficients_for_H);
+    // B::delete_vector_Fr(coefficients_for_H);
     B::delete_groth16_input(inputs);
     B::delete_groth16_params(params);
 
