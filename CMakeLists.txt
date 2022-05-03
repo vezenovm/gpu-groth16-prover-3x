@@ -27,7 +27,7 @@ option(
 option(
   MULTICORE
   "Enable parallelized execution, using OpenMP"
-  ON
+  OFF
 )
 option(
   BINARY_OUTPUT
