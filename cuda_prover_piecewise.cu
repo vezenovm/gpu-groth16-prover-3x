@@ -578,6 +578,16 @@ void run_prover(
     //cudaStreamSynchronize(sA);
     //G1 *evaluation_At = B::read_pt_ECp(out_A.get());
 
+    cudaStreamSynchronize(sB2);
+    printf("synchronized sB2\n");
+    printf("host_B2: %" PRIu64 "\n", *(host_B2[0]));
+    // G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
+    G2 *B2_evaluations[CHUNKS];
+    for (size_t i = 0; i < CHUNKS; i++) {
+        B2_evaluations[i] = B::read_pt_ECpe(host_B2[i]);
+    }
+    print_time(t, "gpu synch B2");
+
     cudaStreamSynchronize(sB1);
     printf("synchronized sB1\n");
     printf("host_B1: %" PRIu64 "\n", *(host_B1[0]));
@@ -606,15 +616,7 @@ void run_prover(
     }
     print_time(t, "gpu synch L");
 
-    cudaStreamSynchronize(sB2);
-    printf("synchronized sB2\n");
-    printf("host_B2: %" PRIu64 "\n", *(host_B2[0]));
-    // G2 *evaluation_Bt2 = B::read_pt_ECpe(host_B2);
-    G2 *B2_evaluations[CHUNKS];
-    for (size_t i = 0; i < CHUNKS; i++) {
-        B2_evaluations[i] = B::read_pt_ECpe(host_B2[i]);
-    }
-    print_time(t, "gpu synch B2");
+
     
     G1 *evaluation_Bt1_sum = B1_evaluations[0];
     G2 *evaluation_Bt2 = B2_evaluations[0];
