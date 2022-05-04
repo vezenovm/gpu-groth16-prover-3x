@@ -141,7 +141,9 @@ load_points_affine_host(size_t n, FILE *inputs) {
 
     // void *aff_bytes_buffer = (void *) malloc (total_aff_bytes);
     void *aff_bytes_buffer;
+    auto t_malloc_host_total = now()
     cudaMallocHost((void **)&aff_bytes_buffer, total_aff_bytes);
+    print_time(t_malloc_host_total, "t_malloc_host_total");
     if (fread(aff_bytes_buffer, total_aff_bytes, 1, inputs) < 1) {
         fprintf(stderr, "Failed to read all curve poinst\n");
         abort();
@@ -334,7 +336,10 @@ void run_prover(
         }
 
         // Moved to main chunk loop
+        auto t_malloc_host_chunk = now();
         cudaMallocHost((void **)&B1_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*B_m_chunks[chunk]));
+        print_time(t_malloc_host_chunk, "t_malloc_host_chunk");
+
         cudaMallocHost((void **)&B2_mults_host_chunked[chunk], get_aff_total_bytes<ECpe>(((1U << C) - 1)*B_m_chunks[chunk]));
         cudaMallocHost((void **)&L_mults_host_chunked[chunk], get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[chunk]));
 
@@ -508,6 +513,9 @@ void run_prover(
         // printf("B_m_chunked * ELT_BYTES: %ld\n", B_m_chunks[i] * ELT_BYTES);
         // cudaDeviceSynchronize();
         // cudaStreamWaitEvent ( sB1, event_B1 );
+
+        auto t_memcpy_multiples = now()
+
         gpuErrchk( 
             cudaMemcpyAsync(B1_mults.get(), 
             B1_mults_host_chunked[i], 
@@ -532,6 +540,8 @@ void run_prover(
                 get_aff_total_bytes<ECp>(((1U << C) - 1)*L_m_chunks[i]), 
                 cudaMemcpyHostToDevice, 
                 sL) );
+
+        print_time(t_memcpy_multiples, "t_malloc_host_total");
 
         // printf("B1_mults_host_chunked[i]: %p\n", B1_mults_host_chunked[i]);
         // printf("i * (B_m_chunked - 1) * ELT_BYTES: %p\n", (i * (B_m_chunks[0]) * ELT_BYTES));
