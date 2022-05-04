@@ -141,7 +141,7 @@ load_points_affine_host(size_t n, FILE *inputs) {
 
     // void *aff_bytes_buffer = (void *) malloc (total_aff_bytes);
     void *aff_bytes_buffer;
-    auto t_malloc_host_total = now()
+    auto t_malloc_host_total = now();
     cudaMallocHost((void **)&aff_bytes_buffer, total_aff_bytes);
     print_time(t_malloc_host_total, "t_malloc_host_total");
     if (fread(aff_bytes_buffer, total_aff_bytes, 1, inputs) < 1) {
@@ -514,7 +514,7 @@ void run_prover(
         // cudaDeviceSynchronize();
         // cudaStreamWaitEvent ( sB1, event_B1 );
 
-        auto t_memcpy_multiples = now()
+        auto t_memcpy_multiples = now();
 
         gpuErrchk( 
             cudaMemcpyAsync(B1_mults.get(), 
